@@ -1,5 +1,32 @@
 apiVersion: v1
 entries:
+  argentum-engine:
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: latest
+    created: "2026-11-08T19:24:09.161521199Z"
+    description: Argentum Engine - an unofficial Magic The Gathering rules engine
+      and web client with built-in, LLM or Jev AI opponents
+    digest: c190fe7981f431d717da93e0b2e776158317061666dbe4188ecbb0477bcbad8d
+    home: https://github.com/wingedsheep/argentum-engine
+    keywords:
+    - mtg
+    - magic-the-gathering
+    - game
+    - ai
+    - llm
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: argentum-engine
+    sources:
+    - https://github.com/wingedsheep/argentum-engine
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/argentum-engine-0.1.0/argentum-engine-0.1.0.tgz
+    version: 0.1.0
   marinara-engine:
   - annotations:
       artifacthub.io/license: AGPL-3.0-only
@@ -51,4 +78,4 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/opencode-kali-0.1.0/opencode-kali-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-08T17:54:37.54362982Z"
+generated: "2026-11-08T19:24:09.161527061Z"
