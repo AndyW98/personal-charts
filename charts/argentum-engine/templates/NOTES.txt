@@ -1,0 +1,22 @@
+Argentum Engine is deploying (AI opponent: {{ if .Values.ai.enabled }}{{ .Values.ai.mode }}{{ else }}disabled{{ end }}).
+{{- if .Values.ingress.enabled }}
+
+Open:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Open it with a port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "argentum-engine.componentName" (dict "root" . "component" "frontend") }} 8080:{{ .Values.frontend.service.port }}
+  then browse to http://127.0.0.1:8080
+{{- end }}
+{{- if and .Values.ai.enabled (has .Values.ai.mode (list "llm" "jev")) (not .Values.existingSecret) }}
+
+NOTE: ai.mode={{ .Values.ai.mode }} but no existingSecret is set, so no API key
+(GAME_AI_API_KEY / OPENROUTER_API_KEY) reaches the backend. Unless your
+endpoint needs no key, the AI will fall back to heuristic play.
+{{- end }}
+
+The site has no login: anyone who can reach it can play and spend your LLM
+credits. Keep it on a private network or put an auth proxy in front of it.

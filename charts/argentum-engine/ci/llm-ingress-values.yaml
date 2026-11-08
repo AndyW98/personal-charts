@@ -1,0 +1,22 @@
+# LLM mode pointed at an unreachable local endpoint, no Redis, ingress on.
+ai:
+  mode: llm
+  baseUrl: http://llm.invalid:11434/v1
+  model: test-model
+  skipLlmDeckbuilding: true
+redis:
+  enabled: false
+backend:
+  env:
+    GAME_HAND_SMOOTHER_ENABLED: false
+ingress:
+  enabled: true
+  hosts:
+    - host: mtg.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mtg-tls
+      hosts:
+        - mtg.example.com

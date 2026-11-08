@@ -1,0 +1,212 @@
+# Default values for argentum-engine.
+# Upstream: https://github.com/wingedsheep/argentum-engine
+#
+# Two components: the Spring Boot game server ("backend", :8080, serves /api and
+# the /game WebSocket) and the web client ("frontend", nginx). The chart's nginx
+# config proxies /api and /game to the backend, so the ingress only needs to
+# point at the frontend.
+
+nameOverride: ""
+fullnameOverride: ""
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# ── AI opponent ────────────────────────────────────────────────────────────
+ai:
+  enabled: true
+  # engine - built-in heuristic AI, no API key
+  # llm    - an OpenAI-compatible chat API plays the opponent (needs a key,
+  #          unless your local endpoint ignores it)
+  # jev    - OpenRouter's Decisions API (needs OPENROUTER_API_KEY)
+  mode: engine
+  # OpenAI-compatible endpoint for llm mode, e.g. a local server:
+  #   http://ollama.ollama.svc:11434/v1
+  baseUrl: https://openrouter.ai/api/v1
+  # Model for llm mode; "" uses the upstream default.
+  model: ""
+  # Separate model for AI deck building; "" falls back to `model`.
+  deckbuildingModel: ""
+  # Always build AI limited decks with the built-in autobuilder instead of the LLM.
+  skipLlmDeckbuilding: false
+
+# Existing Secret loaded into the backend as env vars. Possible keys:
+#   GAME_AI_API_KEY      - API key for ai.baseUrl (llm mode)
+#   OPENROUTER_API_KEY   - OpenRouter key (llm mode fallback, jev mode)
+#   GAME_ADMIN_PASSWORD  - enables /admin (replays, stats)
+#   ACCOUNTS_DB_PASSWORD, ACCOUNTS_AUTH_SECRET, MAIL_USERNAME, MAIL_PASSWORD
+#                        - when accounts.enabled
+existingSecret: ""
+
+# ── Accounts (optional) ────────────────────────────────────────────────────
+# Persistent accounts, saved decks and match stats. Needs an external
+# PostgreSQL; put ACCOUNTS_DB_PASSWORD and ACCOUNTS_AUTH_SECRET in existingSecret.
+# Without mail credentials, magic-link login URLs are logged by the backend.
+accounts:
+  enabled: false
+  database:
+    url: ""            # jdbc:postgresql://postgres.db.svc:5432/argentum
+    user: argentum
+  # Public URL used in magic links. Defaults to the first ingress host.
+  baseUrl: ""
+  fromEmail: ""
+  mail:
+    host: ""
+    port: ""
+
+# ── Backend (game server) ──────────────────────────────────────────────────
+backend:
+  image:
+    repository: ghcr.io/wingedsheep/argentum-engine/backend
+    # Defaults to the chart appVersion ("latest").
+    tag: ""
+    # Pinned so a chart version always deploys the same build (amd64 only).
+    digest: sha256:2d8f1a490d070f49848d15320c449bdc44189d9105d5a666de940d7cfd2f7abf
+    pullPolicy: IfNotPresent
+  javaOpts: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+  # Any other upstream setting as NAME: value, e.g.
+  #   GAME_HAND_SMOOTHER_ENABLED: "false"
+  #   GAME_TOURNAMENT_SIMULATE_AI_MATCHES: "false"
+  env: {}
+  extraEnv: []
+  extraEnvFrom: []
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      memory: 3Gi
+  service:
+    port: 8080
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  # Loading the card database takes a while on first start.
+  startupProbe:
+    httpGet:
+      path: /api/players/online
+      port: http
+    periodSeconds: 5
+    failureThreshold: 60
+  livenessProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 20
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /api/players/online
+      port: http
+    periodSeconds: 10
+    failureThreshold: 3
+  # Games run in memory: a restart drops in-progress games.
+  terminationGracePeriodSeconds: 60
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ── Frontend (web client) ──────────────────────────────────────────────────
+frontend:
+  image:
+    repository: ghcr.io/wingedsheep/argentum-engine/frontend
+    tag: ""
+    digest: sha256:7e516ce2431926d68dd73067138829d7e2bd8ee1ae82b9012725a209ce59b78f
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+  service:
+    type: ClusterIP
+    port: 80
+    annotations: {}
+  podAnnotations: {}
+  podLabels: {}
+  # nginx runs unprivileged on 8080 with the chart's own server config.
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ── Redis ──────────────────────────────────────────────────────────────────
+# Upstream caches game data in Redis. The chart runs a small single-node Redis
+# (append-only, persisted) unless you point at your own or disable it.
+redis:
+  enabled: true
+  # Use an external Redis instead of deploying one.
+  external:
+    host: ""
+    port: 6379
+  image:
+    repository: redis
+    tag: 8.6-alpine
+    pullPolicy: IfNotPresent
+  ttlMinutes: 1440
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 512Mi
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+# ── Ingress ────────────────────────────────────────────────────────────────
+# Points at the frontend; /api and /game (WebSocket) are proxied by its nginx.
+ingress:
+  enabled: false
+  className: ""
+  # Games keep a WebSocket open, e.g. for ingress-nginx:
+  #   nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+  #   nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+  annotations: {}
+  hosts:
+    - host: mtg.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
