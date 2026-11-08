@@ -1,0 +1,13 @@
+# Packaged charts / build output
+*.tgz
+.packaged/
+.cr-release-packages/
+
+# Dependency charts pulled by `helm dependency build`
+charts/*/charts/*.tgz
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
