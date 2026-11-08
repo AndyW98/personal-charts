@@ -1,0 +1,176 @@
+{{- if and .Values.accounts.enabled (not .Values.accounts.database.url) }}
+{{- fail "accounts.enabled requires accounts.database.url (an external PostgreSQL JDBC URL)" }}
+{{- end }}
+{{- $name := include "argentum-engine.componentName" (dict "root" . "component" "backend") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "argentum-engine.componentLabels" (dict "root" . "component" "backend") | nindent 4 }}
+spec:
+  # Games live in this process's memory; one replica, replaced not overlapped.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "argentum-engine.componentSelectorLabels" (dict "root" . "component" "backend") | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ dict "ai" .Values.ai "accounts" .Values.accounts "env" .Values.backend.env "redis" .Values.redis.external | toJson | sha256sum }}
+        {{- with .Values.backend.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "argentum-engine.componentLabels" (dict "root" . "component" "backend") | nindent 8 }}
+        {{- with .Values.backend.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "argentum-engine.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      securityContext:
+        {{- toYaml .Values.backend.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.backend.terminationGracePeriodSeconds }}
+      containers:
+        - name: backend
+          image: {{ include "argentum-engine.image" (dict "image" .Values.backend.image "root" .) | quote }}
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.backend.securityContext | nindent 12 }}
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.backend.javaOpts | quote }}
+            - name: GAME_AI_ENABLED
+              value: {{ .Values.ai.enabled | quote }}
+            - name: GAME_AI_MODE
+              value: {{ .Values.ai.mode | quote }}
+            - name: GAME_AI_BASE_URL
+              value: {{ .Values.ai.baseUrl | quote }}
+            {{- with .Values.ai.model }}
+            - name: GAME_AI_MODEL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.ai.deckbuildingModel }}
+            - name: GAME_AI_DECKBUILDING_MODEL
+              value: {{ . | quote }}
+            {{- end }}
+            - name: GAME_AI_SKIP_LLM_DECKBUILDING
+              value: {{ .Values.ai.skipLlmDeckbuilding | quote }}
+            {{- if or .Values.redis.enabled .Values.redis.external.host }}
+            - name: CACHE_REDIS_ENABLED
+              value: "true"
+            - name: REDIS_HOST
+              value: {{ include "argentum-engine.redisHost" . | quote }}
+            - name: REDIS_PORT
+              value: {{ include "argentum-engine.redisPort" . | quote }}
+            - name: REDIS_TTL_MINUTES
+              value: {{ .Values.redis.ttlMinutes | quote }}
+            {{- else }}
+            - name: CACHE_REDIS_ENABLED
+              value: "false"
+            {{- end }}
+            - name: ACCOUNTS_ENABLED
+              value: {{ .Values.accounts.enabled | quote }}
+            {{- if .Values.accounts.enabled }}
+            # Re-enable the DataSource/Flyway auto-configuration upstream excludes by default.
+            - name: ACCOUNTS_AUTOCONFIG_EXCLUDE
+              value: ""
+            - name: ACCOUNTS_DB_URL
+              value: {{ .Values.accounts.database.url | quote }}
+            - name: ACCOUNTS_DB_USER
+              value: {{ .Values.accounts.database.user | quote }}
+            {{- with include "argentum-engine.baseUrl" . }}
+            - name: APP_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.accounts.fromEmail }}
+            - name: ACCOUNTS_FROM_EMAIL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.accounts.mail.host }}
+            - name: MAIL_HOST
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.accounts.mail.port }}
+            - name: MAIL_PORT
+              value: {{ . | quote }}
+            {{- end }}
+            {{- end }}
+            {{- range $k, $v := .Values.backend.env }}
+            - name: {{ $k }}
+              value: {{ $v | toString | quote }}
+            {{- end }}
+            {{- with .Values.backend.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.existingSecret .Values.backend.extraEnvFrom }}
+          envFrom:
+            {{- with .Values.existingSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- with .Values.backend.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- with .Values.backend.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "argentum-engine.componentLabels" (dict "root" . "component" "backend") | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.backend.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "argentum-engine.componentSelectorLabels" (dict "root" . "component" "backend") | nindent 4 }}

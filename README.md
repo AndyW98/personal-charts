@@ -12,6 +12,7 @@ version is merged to `main`, it is published to:
 
 | Chart | App | Description |
 |-------|-----|-------------|
+| [`argentum-engine`](charts/argentum-engine) | [Argentum Engine](https://github.com/wingedsheep/argentum-engine) | Magic: The Gathering rules engine + web client with built-in or LLM AI opponents |
 | [`marinara-engine`](charts/marinara-engine) | [Marinara Engine](https://github.com/Pasta-Devs/Marinara-Engine) | Self-hosted AI chat, roleplay and game engine |
 | [`opencode-kali`](charts/opencode-kali) | [opencode](https://opencode.ai) | `opencode serve` in a Kali Linux container (custom image from `images/opencode-kali`) |
 

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "argentum-engine.fullname" . }}-test-connection"
+  labels:
+    {{- include "argentum-engine.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: check
+      image: busybox:1.37
+      # Through the frontend's nginx to the backend: checks the whole chain.
+      command:
+        - wget
+        - -q
+        - -O-
+        - "http://{{ include "argentum-engine.componentName" (dict "root" . "component" "frontend") }}:{{ .Values.frontend.service.port }}/api/players/online"
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL

@@ -1,0 +1,22 @@
+apiVersion: v2
+name: argentum-engine
+description: Argentum Engine - an unofficial Magic The Gathering rules engine and web client with built-in, LLM or Jev AI opponents
+type: application
+version: 0.1.0
+# Upstream only publishes `latest`; values.yaml pins the image digests.
+appVersion: "latest"
+home: https://github.com/wingedsheep/argentum-engine
+sources:
+  - https://github.com/wingedsheep/argentum-engine
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - mtg
+  - magic-the-gathering
+  - game
+  - ai
+  - llm
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: MIT
