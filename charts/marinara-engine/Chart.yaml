@@ -1,0 +1,21 @@
+apiVersion: v2
+name: marinara-engine
+description: Marinara Engine - a self-hosted, AI-powered chat, roleplay and game engine
+type: application
+version: 0.1.0
+appVersion: "2.5.2"
+home: https://github.com/Pasta-Devs/Marinara-Engine
+sources:
+  - https://github.com/Pasta-Devs/Marinara-Engine
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - ai
+  - llm
+  - chat
+  - roleplay
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: AGPL-3.0-only

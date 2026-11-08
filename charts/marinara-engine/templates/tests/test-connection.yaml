@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "marinara-engine.fullname" . }}-test-connection"
+  labels:
+    {{- include "marinara-engine.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: wget
+      image: busybox:1.37
+      # Host is the single-label service name, which Marinara trusts automatically.
+      command:
+        - wget
+        - -q
+        - -O-
+        - "http://{{ include "marinara-engine.fullname" . }}:{{ .Values.service.port }}/api/health"
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL

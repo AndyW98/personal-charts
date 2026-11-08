@@ -1,0 +1,25 @@
+# Lite image with ingress, TLS-derived CSRF origins, extra config and secret-free env.
+image:
+  variant: lite
+persistence:
+  enabled: false
+config:
+  timezone: Europe/London
+  logLevel: info
+  trustedHosts:
+    - marinara.internal.example
+  ipAllowlist:
+    - 10.0.0.0/8
+  env:
+    CHAT_GENERATION_TIMEOUT_MS: 600000
+ingress:
+  enabled: true
+  hosts:
+    - host: marinara.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: marinara-tls
+      hosts:
+        - marinara.example.com
