@@ -1,0 +1,172 @@
+# Default values for marinara-engine.
+# Upstream configuration reference:
+#   https://github.com/Pasta-Devs/Marinara-Engine/blob/main/.env.example
+#   https://github.com/Pasta-Devs/Marinara-Engine/blob/main/docs/REMOTE_ACCESS.md
+
+image:
+  repository: ghcr.io/pasta-devs/marinara-engine
+  # Defaults to the chart appVersion.
+  tag: ""
+  # "" for the full image, or "lite" for the smaller Wolfi-based image without
+  # the local sidecar model, local embeddings / memory recall and local Whisper.
+  variant: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# Marinara stores everything (chats, characters, uploads, generated
+# assets, its auto-generated encryption key) under /app/data, so it runs as a
+# single replica with a ReadWriteOnce volume and a Recreate rollout.
+
+# ── App configuration ──────────────────────────────────────────────────────
+config:
+  # IANA timezone used by server-side schedules, e.g. "Europe/London".
+  timezone: ""
+  # error | warn | info | debug (debug logs full prompts and responses).
+  logLevel: warn
+  # "json" (default for containers) or "pretty".
+  logFormat: json
+  # Extra hostnames accepted by Marinara's Host-header check. Ingress hosts
+  # are added automatically.
+  trustedHosts: []
+  # Extra browser origins trusted for CSRF checks, e.g. "https://chat.example.com".
+  # Ingress hosts are added automatically (https:// when covered by ingress TLS).
+  csrfTrustedOrigins: []
+  # List of IPs/CIDRs; when set, other client IPs get 403.
+  ipAllowlist: []
+  # Any other upstream setting as plain (non-secret) env vars, e.g.
+  #   CHAT_GENERATION_TIMEOUT_MS: "600000"
+  #   MARINARA_NOTICES_ENABLED: "true"
+  env: {}
+
+# Name of an existing Secret whose keys are all loaded as environment
+# variables. Use it for the sensitive settings, for example:
+#   ADMIN_SECRET      - required for privileged APIs from non-loopback clients
+#   BASIC_AUTH_USER   - login username (both user and pass must be set)
+#   BASIC_AUTH_PASS   - login password
+#   ENCRYPTION_KEY    - 64 hex chars (openssl rand -hex 32); if unset, Marinara
+#                       generates one and stores it in the data volume
+# Until a login exists, non-loopback clients (including anything coming through
+# an ingress) only get a one-time setup page. Either set BASIC_AUTH_* here, or
+# create a login in the app: via `kubectl port-forward` (counts as loopback) or
+# with the one-time setup code printed in the pod logs.
+existingSecret: ""
+
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+persistence:
+  enabled: true
+  # Use a pre-created PVC instead of letting the chart create one.
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+  # Keep the PVC when the release is uninstalled.
+  retain: true
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 7860
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  # Generations and image renders can stream for minutes, e.g. for ingress-nginx:
+  #   nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
+  #   nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
+  #   nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  annotations: {}
+  hosts:
+    - host: marinara.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: marinara-tls
+  #    hosts:
+  #      - marinara.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# The image's entrypoint starts as root only to chown /app/data and then drops
+# to the "node" user (1000). Running as 1000 directly skips that step; fsGroup
+# makes the volume writable instead.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  # Marinara installs optional runtime components (e.g. the background remover's
+  # Python venv) and provider CLI logins outside /app/data, so the root
+  # filesystem stays writable by default.
+  readOnlyRootFilesystem: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 4Gi
+    # For local models on a GPU node, e.g.:
+    # nvidia.com/gpu: 1
+
+# e.g. "nvidia" for GPU nodes using the NVIDIA container runtime.
+runtimeClassName: ""
+
+startupProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 10
+  failureThreshold: 30
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+extraVolumes: []
+extraVolumeMounts: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

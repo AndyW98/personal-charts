@@ -8,6 +8,12 @@ version is merged to `main`, it is published to:
   with each chart package attached to a GitHub release.
 - **GHCR** as an OCI artifact at `oci://ghcr.io/andyw98/charts/<chart>`.
 
+## Charts
+
+| Chart | App | Description |
+|-------|-----|-------------|
+| [`marinara-engine`](charts/marinara-engine) | [Marinara Engine](https://github.com/Pasta-Devs/Marinara-Engine) | Self-hosted AI chat, roleplay and game engine |
+
 ## Layout
 
 ```

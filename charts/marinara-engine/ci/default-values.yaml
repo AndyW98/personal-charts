@@ -1,0 +1,3 @@
+# Defaults: full image, chart-managed PVC, no ingress.
+persistence:
+  retain: false

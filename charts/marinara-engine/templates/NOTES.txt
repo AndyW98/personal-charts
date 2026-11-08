@@ -1,0 +1,29 @@
+Marinara Engine {{ include "marinara-engine.imageTag" . }} is deploying.
+
+{{- if .Values.ingress.enabled }}
+
+Open:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Open it with a port-forward (connections arrive as loopback, so no login is needed):
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "marinara-engine.fullname" . }} 7860:{{ .Values.service.port }}
+  then browse to http://127.0.0.1:7860
+{{- end }}
+
+Access control:
+{{- if .Values.existingSecret }}
+  Settings from Secret "{{ .Values.existingSecret }}" are loaded as env vars
+  (BASIC_AUTH_USER / BASIC_AUTH_PASS / ADMIN_SECRET / ENCRYPTION_KEY).
+{{- else }}
+  No login is configured yet. Until one exists, clients that are not on
+  loopback (including everything coming through an ingress) only get a
+  one-time setup page. Either:
+    - set `existingSecret` to a Secret with BASIC_AUTH_USER and BASIC_AUTH_PASS
+      (plus ADMIN_SECRET), or
+    - open the app via port-forward and set a login in Settings -> Advanced -> Access, or
+    - open it remotely and enter the one-time setup code from the logs:
+        kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "marinara-engine.fullname" . }} | grep "setup code"
+{{- end }}
