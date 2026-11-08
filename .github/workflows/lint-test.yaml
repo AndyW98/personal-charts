@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "charts/**"
+      - "images/**"
       - "ct.yaml"
       - ".yamllint.yaml"
       - ".github/workflows/lint-test.yaml"
@@ -70,8 +71,11 @@ jobs:
             name="$(basename "$dir")"
             echo "::group::$name"
             helm dependency build "$dir" >/dev/null
-            for vf in "" "$dir"/ci/*-values.yaml; do
-              [ -n "$vf" ] && [ ! -f "$vf" ] && continue
+            # Like ct: use ci/*-values.yaml when present, else the defaults.
+            shopt -s nullglob
+            value_files=("$dir"/ci/*-values.yaml)
+            [ ${#value_files[@]} -eq 0 ] && value_files=("")
+            for vf in "${value_files[@]}"; do
               args=()
               [ -n "$vf" ] && args=(-f "$vf") && echo "values: $vf"
               helm template "$name" "$dir" "${args[@]}" --kube-version "$KUBERNETES_VERSION" \
@@ -86,6 +90,32 @@ jobs:
       - name: Create kind cluster
         if: steps.changed.outputs.any == 'true'
         uses: helm/kind-action@v1.12.0
+
+      # Charts whose image is built in this repo (images/<chart>/Dockerfile) get
+      # a CI build of it, tagged <image.repository>:ci and loaded into kind.
+      # Build args come from images/<chart>/ci-build-args plus APP_VERSION.
+      - name: Build and load chart images into kind
+        if: steps.changed.outputs.any == 'true'
+        run: |
+          set -euo pipefail
+          while read -r dir; do
+            [ -z "$dir" ] && continue
+            name="$(basename "$dir")"
+            ctx="images/$name"
+            [ -f "$ctx/Dockerfile" ] || continue
+            args=(--build-arg "APP_VERSION=$(yq '.appVersion' "$dir/Chart.yaml")")
+            if [ -f "$ctx/ci-build-args" ]; then
+              while IFS= read -r line; do
+                case "$line" in ''|\#*) continue ;; esac
+                args+=(--build-arg "$line")
+              done < "$ctx/ci-build-args"
+            fi
+            image="$(yq '.image.repository' "$dir/values.yaml"):ci"
+            echo "::group::build $image"
+            docker build "${args[@]}" -t "$image" "$ctx"
+            kind load docker-image "$image" --name chart-testing
+            echo "::endgroup::"
+          done <<< "${{ steps.changed.outputs.charts }}"
 
       - name: Install charts into kind
         if: steps.changed.outputs.any == 'true'

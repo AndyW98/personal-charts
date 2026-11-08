@@ -13,6 +13,7 @@ version is merged to `main`, it is published to:
 | Chart | App | Description |
 |-------|-----|-------------|
 | [`marinara-engine`](charts/marinara-engine) | [Marinara Engine](https://github.com/Pasta-Devs/Marinara-Engine) | Self-hosted AI chat, roleplay and game engine |
+| [`opencode-kali`](charts/opencode-kali) | [opencode](https://opencode.ai) | `opencode serve` in a Kali Linux container (custom image from `images/opencode-kali`) |
 
 ## Layout
 
@@ -24,10 +25,15 @@ version is merged to `main`, it is published to:
 │       ├── values.yaml
 │       ├── templates/
 │       └── ci/                 # optional *-values.yaml files used in CI
+├── images/                     # custom images for charts that need one
+│   └── <chart>/
+│       ├── Dockerfile          # published as ghcr.io/andyw98/<chart>:<appVersion>
+│       └── ci-build-args       # optional build args for the CI (kind) build
 ├── ct.yaml                     # chart-testing config
 ├── .yamllint.yaml              # YAML lint rules for Chart.yaml / values.yaml
 └── .github/workflows/
     ├── lint-test.yaml          # PRs: lint, validate, install into kind
+    ├── images.yaml             # build/push images/<chart> to GHCR
     └── release.yaml            # main: package + publish new versions
 ```
 
@@ -87,6 +93,24 @@ Both workflows use the built-in `GITHUB_TOKEN`, so no secrets need to be configu
 
 `KUBERNETES_VERSION` in `lint-test.yaml` sets the Kubernetes version manifests
 are validated against; keep it in sync with the cluster.
+
+### Custom images
+
+Some charts run an image built in this repository from `images/<chart>/Dockerfile`:
+
+- `images.yaml` builds it on PRs (without pushing) and publishes it on pushes
+  to `main`, every Monday, and on manual runs. It's tagged
+  `ghcr.io/andyw98/<chart>:<appVersion>`, `:<appVersion>-<YYYYMMDD>` and
+  `:latest`, and the chart's `appVersion` is passed in as the `APP_VERSION`
+  build arg.
+- `lint-test.yaml` builds a CI copy (using `images/<chart>/ci-build-args`),
+  tags it `<image.repository>:ci` and loads it into kind before `ct install`.
+  The chart's `ci/*-values.yaml` should use `image.tag: ci` and
+  `image.pullPolicy: Never`.
+- The chart release and the image build run as separate workflows, so a new
+  chart version can be published a few minutes before its image exists.
+- New GHCR packages are private. Make them public or give the cluster an
+  image pull secret.
 
 ### One-time repository setup
 

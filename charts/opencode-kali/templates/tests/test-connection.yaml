@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "opencode-kali.fullname" . }}-test-connection"
+  labels:
+    {{- include "opencode-kali.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: check
+      image: busybox:1.37
+      # Without auth the health route answers directly; with auth expect 401.
+      command:
+        - sh
+        - -c
+        - |
+          {{- if .Values.auth.enabled }}
+          wget -S -q -O- "http://{{ include "opencode-kali.fullname" . }}:{{ .Values.service.port }}/global/health" 2>&1 | grep -q "401"
+          {{- else }}
+          wget -q -O- "http://{{ include "opencode-kali.fullname" . }}:{{ .Values.service.port }}/global/health"
+          {{- end }}
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL

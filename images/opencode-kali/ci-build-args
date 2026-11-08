@@ -1,0 +1,3 @@
+# Build args used when CI builds this image for `ct install` in kind.
+# Keep it small: skip the Kali tool metapackage.
+KALI_PACKAGES=

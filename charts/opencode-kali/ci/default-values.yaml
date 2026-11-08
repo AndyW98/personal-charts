@@ -1,0 +1,12 @@
+# CI: image built from images/opencode-kali with ci-build-args and loaded into kind.
+image:
+  tag: ci
+  pullPolicy: Never
+# ct install cannot pre-create a Secret, so CI runs without the password.
+auth:
+  enabled: false
+persistence:
+  retain: false
+config:
+  $schema: https://opencode.ai/config.json
+  autoupdate: false
