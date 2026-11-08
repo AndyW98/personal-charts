@@ -1,0 +1,150 @@
+# Default values for opencode-kali.
+# Image source: images/opencode-kali/Dockerfile in this repository.
+# opencode server docs: https://opencode.ai/docs/server/
+
+image:
+  repository: ghcr.io/andyw98/opencode-kali
+  # Defaults to the chart appVersion (the opencode version in the image).
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# ── Authentication ─────────────────────────────────────────────────────────
+# opencode serve has no auth unless OPENCODE_SERVER_PASSWORD is set, and the
+# agent can run any shell command in the container. Keep this on.
+auth:
+  enabled: true
+  # Existing Secret holding the server password (required when enabled).
+  existingSecret: ""
+  passwordKey: OPENCODE_SERVER_PASSWORD
+  # HTTP basic auth username clients use.
+  username: opencode
+
+# Existing Secret whose keys are all loaded as env vars: LLM provider keys,
+# e.g. ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY. Can be the same
+# Secret as auth.existingSecret.
+envFromSecret: ""
+
+# ── opencode ───────────────────────────────────────────────────────────────
+server:
+  port: 4096
+  # Extra origins allowed for CORS (`--cors`), e.g. a hosted web client.
+  cors: []
+  # Extra arguments appended to `opencode serve`.
+  extraArgs: []
+
+# opencode.json contents (https://opencode.ai/docs/config/). Rendered into a
+# ConfigMap and passed via OPENCODE_CONFIG. Leave empty to only use the
+# config files in the persisted home directory and the workspace.
+config: {}
+#  $schema: https://opencode.ai/config.json
+#  model: <provider>/<model-id>
+#  autoupdate: false
+#  permission:
+#    bash: ask
+
+# Plain (non-secret) env vars as NAME: value.
+env: {}
+# Additional env vars (full EnvVar objects) and envFrom sources.
+extraEnv: []
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# One volume holds both the home directory (/home/kali: opencode config,
+# provider logins in ~/.local/share/opencode, sessions, caches) and the
+# project workspace (/workspace, the server's working directory).
+persistence:
+  enabled: true
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 20Gi
+  annotations: {}
+  # Keep the PVC when the release is uninstalled.
+  retain: true
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 4096
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  # Agent runs stream for a long time, e.g. for ingress-nginx:
+  #   nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+  #   nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  annotations: {}
+  hosts:
+    - host: opencode.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# Runs as the image's unprivileged "kali" user (1000). Tools that need raw
+# sockets (e.g. nmap SYN/OS scans) or apt installs need root: see README.md.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 4Gi
+
+# opencode serve requires auth on every route once a password is set, so the
+# probes only check that the port accepts connections.
+startupProbe:
+  tcpSocket:
+    port: http
+  periodSeconds: 5
+  failureThreshold: 30
+livenessProbe:
+  tcpSocket:
+    port: http
+  periodSeconds: 20
+  failureThreshold: 3
+readinessProbe:
+  tcpSocket:
+    port: http
+  periodSeconds: 10
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+extraVolumes: []
+extraVolumeMounts: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

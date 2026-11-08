@@ -1,0 +1,20 @@
+apiVersion: v2
+name: opencode-kali
+description: opencode headless server (`opencode serve`) in a Kali Linux container
+type: application
+version: 0.1.0
+# opencode version baked into the image (images/opencode-kali).
+appVersion: "1.19.5"
+home: https://opencode.ai
+sources:
+  - https://github.com/anomalyco/opencode
+  - https://github.com/AndyW98/personal-charts/tree/main/images/opencode-kali
+keywords:
+  - opencode
+  - ai
+  - coding-agent
+  - kali
+  - security
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98

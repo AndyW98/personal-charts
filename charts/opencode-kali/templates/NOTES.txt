@@ -1,0 +1,28 @@
+opencode {{ .Values.image.tag | default .Chart.AppVersion }} (Kali Linux) is deploying.
+
+{{- if .Values.ingress.enabled }}
+
+Server URL:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Reach it with a port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "opencode-kali.fullname" . }} 4096:{{ .Values.service.port }}
+{{- end }}
+
+Connect a client, e.g.:
+{{- if .Values.auth.enabled }}
+  export OPENCODE_SERVER_PASSWORD=...   # from Secret "{{ .Values.auth.existingSecret }}"
+{{- end }}
+  opencode attach http://127.0.0.1:4096 --dir /workspace
+  opencode run --attach http://127.0.0.1:4096 "task"
+
+Projects live under /workspace on the persistent volume. Clone repos there, e.g.:
+  kubectl -n {{ .Release.Namespace }} exec -it deploy/{{ include "opencode-kali.fullname" . }} -- git clone <url> /workspace/<name>
+{{- if not .Values.auth.enabled }}
+
+WARNING: auth is disabled. Anyone who can reach this service can run shell
+commands in the container through the opencode API.
+{{- end }}

@@ -17,6 +17,10 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
 - `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules for `Chart.yaml`/`values.yaml`.
 - `.github/workflows/lint-test.yaml` — PRs: `ct lint`, kubeconform validation, `ct install` into kind (changed charts only).
 - `.github/workflows/release.yaml` — push to `main`: chart-releaser (GitHub releases + `gh-pages` index) and OCI push to GHCR.
+- `images/<chart>/Dockerfile` — custom image for a chart, published by `.github/workflows/images.yaml` as
+  `ghcr.io/andyw98/<chart>:<appVersion>`. The chart's `appVersion` is passed as the `APP_VERSION` build arg, so the
+  Dockerfile must install that version from `ARG APP_VERSION`. `images/<chart>/ci-build-args` (KEY=value lines) slims
+  the CI build that `lint-test.yaml` loads into kind as `<image.repository>:ci`.
 
 ## Rules when changing charts
 
@@ -37,6 +41,11 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
 - Pin chart dependencies to exact versions in `Chart.yaml`; don't commit the
   downloaded `charts/<app>/charts/*.tgz` (gitignored).
 - Keep manifests valid for the `KUBERNETES_VERSION` set in `.github/workflows/lint-test.yaml`.
+- For charts with a custom image, bump `appVersion` (and the chart `version`) to upgrade the
+  app; keep the Dockerfile's `ARG APP_VERSION` default in sync. Their `ci/*-values.yaml` must set
+  `image.tag: ci` and `image.pullPolicy: Never`.
+- When a chart refuses to render without a required value (e.g. a password Secret),
+  every `ci/*-values.yaml` must supply or disable it: CI renders only those files when present.
 - Charts must install cleanly into a bare kind cluster with default values (or
   `ci/*-values.yaml`), since `ct install` runs on every PR. Make optional
   dependencies (ingress, CRD-backed resources, external secrets) opt-in.

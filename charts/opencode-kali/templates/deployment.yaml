@@ -1,0 +1,160 @@
+{{- if and .Values.auth.enabled (not .Values.auth.existingSecret) }}
+{{- fail "auth.existingSecret is required: create a Secret with OPENCODE_SERVER_PASSWORD (or set auth.enabled=false, which leaves the agent's shell open to anyone who can reach the service)" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "opencode-kali.fullname" . }}
+  labels:
+    {{- include "opencode-kali.labels" . | nindent 4 }}
+spec:
+  # One server per workspace volume.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "opencode-kali.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Values.config | toJson | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "opencode-kali.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "opencode-kali.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      containers:
+        - name: opencode
+          image: {{ include "opencode-kali.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          args:
+            - serve
+            - --hostname
+            - "0.0.0.0"
+            - --port
+            - {{ .Values.server.port | quote }}
+            {{- range .Values.server.cors }}
+            - --cors
+            - {{ . | quote }}
+            {{- end }}
+            {{- range .Values.server.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          env:
+            - name: HOME
+              value: /home/kali
+            - name: OPENCODE_DISABLE_AUTOUPDATE
+              value: "true"
+            {{- if .Values.auth.enabled }}
+            - name: OPENCODE_SERVER_USERNAME
+              value: {{ .Values.auth.username | quote }}
+            - name: OPENCODE_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecret }}
+                  key: {{ .Values.auth.passwordKey }}
+            {{- end }}
+            {{- if .Values.config }}
+            - name: OPENCODE_CONFIG
+              value: /etc/opencode/opencode.json
+            {{- end }}
+            {{- range $name, $value := .Values.env }}
+            - name: {{ $name }}
+              value: {{ $value | toString | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.envFromSecret .Values.extraEnvFrom }}
+          envFrom:
+            {{- with .Values.envFromSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.port }}
+              protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /home/kali
+              subPath: home
+            - name: data
+              mountPath: /workspace
+              subPath: workspace
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.config }}
+            - name: config
+              mountPath: /etc/opencode
+              readOnly: true
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "opencode-kali.claimName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.config }}
+        - name: config
+          configMap:
+            name: {{ include "opencode-kali.fullname" . }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
