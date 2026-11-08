@@ -27,4 +27,28 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/marinara-engine-0.1.0/marinara-engine-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-08T16:26:53.97478966Z"
+  opencode-kali:
+  - apiVersion: v2
+    appVersion: 1.19.5
+    created: "2026-11-08T17:54:37.543620446Z"
+    description: opencode headless server (`opencode serve`) in a Kali Linux container
+    digest: d2347448b5b0e82eab02ef9d36173f1c707b9a34279781d124d4ea4a182770cc
+    home: https://opencode.ai
+    keywords:
+    - opencode
+    - ai
+    - coding-agent
+    - kali
+    - security
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: opencode-kali
+    sources:
+    - https://github.com/anomalyco/opencode
+    - https://github.com/AndyW98/personal-charts/tree/main/images/opencode-kali
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/opencode-kali-0.1.0/opencode-kali-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-11-08T17:54:37.54362982Z"
