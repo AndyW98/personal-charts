@@ -2,6 +2,7 @@
 *.tgz
 .packaged/
 .cr-release-packages/
+.cr-index/
 
 # Dependency charts pulled by `helm dependency build`
 charts/*/charts/*.tgz

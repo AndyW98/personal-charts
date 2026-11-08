@@ -1,0 +1,92 @@
+name: Lint and test charts
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+      - "ct.yaml"
+      - ".yamllint.yaml"
+      - ".github/workflows/lint-test.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Kubernetes version manifests are validated against. Match your cluster.
+  KUBERNETES_VERSION: "1.31.0"
+  KUBECONFORM_VERSION: v0.6.7
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: helm/chart-testing-action@v2.7.0
+
+      - name: List changed charts
+        id: changed
+        run: |
+          changed="$(ct list-changed --config ct.yaml --target-branch "${{ github.event.repository.default_branch }}")"
+          echo "$changed"
+          {
+            echo "charts<<EOF"
+            echo "$changed"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          [ -n "$changed" ] && echo "any=true" >> "$GITHUB_OUTPUT" || true
+
+      - name: Lint (helm lint, yamllint, version bump check)
+        if: steps.changed.outputs.any == 'true'
+        run: ct lint --config ct.yaml --target-branch "${{ github.event.repository.default_branch }}"
+
+      - name: Install kubeconform
+        if: steps.changed.outputs.any == 'true'
+        run: |
+          curl -sSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin kubeconform
+
+      - name: Validate rendered manifests
+        if: steps.changed.outputs.any == 'true'
+        run: |
+          set -euo pipefail
+          while read -r dir; do
+            [ -z "$dir" ] && continue
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            helm dependency build "$dir" >/dev/null
+            for vf in "" "$dir"/ci/*-values.yaml; do
+              [ -n "$vf" ] && [ ! -f "$vf" ] && continue
+              args=()
+              [ -n "$vf" ] && args=(-f "$vf") && echo "values: $vf"
+              helm template "$name" "$dir" "${args[@]}" --kube-version "$KUBERNETES_VERSION" \
+                | kubeconform -strict -summary -ignore-missing-schemas \
+                    -kubernetes-version "$KUBERNETES_VERSION" \
+                    -schema-location default \
+                    -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+            done
+            echo "::endgroup::"
+          done <<< "${{ steps.changed.outputs.charts }}"
+
+      - name: Create kind cluster
+        if: steps.changed.outputs.any == 'true'
+        uses: helm/kind-action@v1.12.0
+
+      - name: Install charts into kind
+        if: steps.changed.outputs.any == 'true'
+        run: ct install --config ct.yaml --target-branch "${{ github.event.repository.default_branch }}"

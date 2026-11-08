@@ -1,0 +1,71 @@
+name: Release charts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/**"
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # GitHub releases + gh-pages index
+      packages: write   # OCI charts on ghcr.io
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      # chart-releaser publishes index.yaml to gh-pages; create it on first run.
+      - name: Ensure gh-pages branch exists
+        run: |
+          if ! git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            git worktree add --orphan -b gh-pages /tmp/gh-pages
+            cd /tmp/gh-pages
+            git commit --allow-empty -m "Initialize gh-pages for Helm repository index"
+            git push origin gh-pages
+            cd - && git worktree remove /tmp/gh-pages
+          fi
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      # Packages each chart whose version has no release yet, creates a GitHub
+      # release "<chart>-<version>" with the .tgz, and updates index.yaml on
+      # the gh-pages branch.
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          skip_existing: true
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_GENERATE_RELEASE_NOTES: true
+
+      - name: Push charts to GHCR (OCI)
+        run: |
+          shopt -s nullglob
+          pkgs=(.cr-release-packages/*.tgz)
+          if [ ${#pkgs[@]} -eq 0 ]; then
+            echo "No new chart packages to push."
+            exit 0
+          fi
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
+            --username "${{ github.actor }}" --password-stdin
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          for pkg in "${pkgs[@]}"; do
+            echo "Pushing $pkg"
+            helm push "$pkg" "oci://ghcr.io/${owner}/charts"
+          done

@@ -5,17 +5,18 @@ Guidance for Claude Code when working in this repository.
 ## What this repo is
 
 A personal Helm chart repository. Each chart deploys one self-hosted
-application to the owner's Kubernetes cluster. GitLab CI lints, validates,
-packages and publishes charts to the project's GitLab Helm package registry
-(channel `stable`). See `README.md` for consumer-facing usage.
+application to the owner's Kubernetes cluster. GitHub Actions lints and tests
+charts on PRs, and on merge to `main` publishes new chart versions as GitHub
+releases with a Helm repo index on GitHub Pages (`gh-pages`), plus OCI
+artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage.
 
 ## Layout
 
 - `charts/<app>/` — one chart per app. Directory name must equal `name` in `Chart.yaml`.
-- `charts/<app>/ci/*-values.yaml` — extra value sets rendered in CI validation.
-- `scripts/publish-charts.sh` — packages charts and uploads versions not yet in the registry (idempotent).
-- `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules (templates are excluded).
-- `.gitlab-ci.yml` — stages: `lint` → `validate` → `package` → `publish` (publish runs on the default branch only).
+- `charts/<app>/ci/*-values.yaml` — extra value sets used by kubeconform validation and `ct install` in CI.
+- `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules for `Chart.yaml`/`values.yaml`.
+- `.github/workflows/lint-test.yaml` — PRs: `ct lint`, kubeconform validation, `ct install` into kind (changed charts only).
+- `.github/workflows/release.yaml` — push to `main`: chart-releaser (GitHub releases + `gh-pages` index) and OCI push to GHCR.
 
 ## Rules when changing charts
 
@@ -35,7 +36,10 @@ packages and publishes charts to the project's GitLab Helm package registry
   `readOnlyRootFilesystem` where the app allows it.
 - Pin chart dependencies to exact versions in `Chart.yaml`; don't commit the
   downloaded `charts/<app>/charts/*.tgz` (gitignored).
-- Keep manifests valid for the `KUBERNETES_VERSION` set in `.gitlab-ci.yml`.
+- Keep manifests valid for the `KUBERNETES_VERSION` set in `.github/workflows/lint-test.yaml`.
+- Charts must install cleanly into a bare kind cluster with default values (or
+  `ci/*-values.yaml`), since `ct install` runs on every PR. Make optional
+  dependencies (ingress, CRD-backed resources, external secrets) opt-in.
 
 ## Verifying changes
 
@@ -52,6 +56,6 @@ summary that CI will perform the full lint/validation.
 
 ## Don'ts
 
-- Don't edit `.packaged/` or commit `*.tgz` files.
-- Don't change the publish channel or registry URL without being asked —
-  the cluster's Helm/GitOps config depends on them.
+- Don't commit `*.tgz` files or edit the `gh-pages` branch by hand — chart-releaser owns it.
+- Don't change the Helm repo URL, GHCR path, or release tag format without being
+  asked — the cluster's Helm/GitOps config depends on them.

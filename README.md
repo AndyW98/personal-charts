@@ -1,53 +1,54 @@
 # personal-charts
 
 Helm charts for the applications I self-host on my Kubernetes cluster.
-Charts are linted, validated and packaged in GitLab CI, and every new chart
-version merged to the default branch is published to this project's
-[GitLab Helm package registry](https://docs.gitlab.com/ee/user/packages/helm_repository/).
+GitHub Actions lints and tests charts on pull requests. When a new chart
+version is merged to `main`, it is published to:
+
+- **A classic Helm repository** served from GitHub Pages (`gh-pages` branch),
+  with each chart package attached to a GitHub release.
+- **GHCR** as an OCI artifact at `oci://ghcr.io/andyw98/charts/<chart>`.
 
 ## Layout
 
 ```
 .
-├── charts/                 # one directory per chart
+├── charts/                     # one directory per chart
 │   └── <app>/
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       ├── templates/
-│       └── ci/             # optional *-values.yaml files used in CI validation
-├── scripts/
-│   └── publish-charts.sh   # packages + uploads new chart versions
-├── ct.yaml                 # chart-testing config
-├── .yamllint.yaml
-└── .gitlab-ci.yml
+│       └── ci/                 # optional *-values.yaml files used in CI
+├── ct.yaml                     # chart-testing config
+├── .yamllint.yaml              # YAML lint rules for Chart.yaml / values.yaml
+└── .github/workflows/
+    ├── lint-test.yaml          # PRs: lint, validate, install into kind
+    └── release.yaml            # main: package + publish new versions
 ```
 
 ## Using the charts
 
-Add the repository (use a personal/deploy token with `read_api`, or
-`read_package_registry` for a deploy token):
+From the Helm repository (GitHub Pages):
 
 ```sh
-helm repo add personal-charts \
-  https://<gitlab-host>/api/v4/projects/<project-id>/packages/helm/stable \
-  --username <username> --password <token>
+helm repo add personal-charts https://andyw98.github.io/personal-charts
 helm repo update
 helm search repo personal-charts
-```
 
-Install / upgrade an app:
-
-```sh
 helm upgrade --install <release> personal-charts/<chart> \
   --namespace <ns> --create-namespace \
   -f my-values.yaml
 ```
 
-If OCI publishing is enabled in CI (see below) you can also pull directly:
+Or directly from GHCR (no `repo add` needed):
 
 ```sh
-helm install <release> oci://<registry-host>/<group>/personal-charts/charts/<chart> --version <x.y.z>
+helm upgrade --install <release> oci://ghcr.io/andyw98/charts/<chart> \
+  --version <x.y.z> --namespace <ns> --create-namespace -f my-values.yaml
 ```
+
+> If the repository or GHCR packages are private, GitHub Pages needs to be
+> accessible to the cluster and `helm registry login ghcr.io` needs a token
+> with `read:packages`.
 
 ## Adding a chart
 
@@ -62,36 +63,39 @@ Conventions:
 
 - Chart directory name == `name` in `Chart.yaml`.
 - Follow [SemVer](https://semver.org/) for `version`. **Bump `version` on every
-  change to a chart** — merge requests fail `ct lint` otherwise, and the
-  publish job skips versions that already exist in the registry.
+  change to a chart.** PRs fail `ct lint` without a bump, and the release
+  workflow skips versions that already have a release.
 - Set `appVersion` to the upstream application version being deployed.
 - Keep secrets out of `values.yaml`; reference existing `Secret`s instead.
 - Add `charts/<app>/ci/*-values.yaml` files to exercise non-default
-  configurations in CI.
+  configurations in CI (used by both kubeconform validation and `ct install`).
 
-## CI pipeline
+## CI
 
-| Stage      | Job        | What it does                                                                       | Runs on               |
-|------------|------------|------------------------------------------------------------------------------------|-----------------------|
-| `lint`     | `lint`     | `yamllint` + `ct lint`; on MRs only changed charts, and a version bump is required | MRs, branches, tags   |
-| `validate` | `validate` | `helm template` each chart (default + `ci/*-values.yaml`) through `kubeconform`    | MRs, branches, tags   |
-| `package`  | `package`  | `helm package` every chart, stored as job artifacts                                | MRs, branches, tags   |
-| `publish`  | `publish`  | Uploads any chart version not already in the registry                              | default branch only   |
+| Workflow         | Trigger                          | What it does                                                                                                                                      |
+|------------------|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `lint-test.yaml` | PRs touching `charts/**`         | For changed charts only: `ct lint` (helm lint, yamllint, version-bump check), render + validate with `kubeconform`, then `ct install` into a kind cluster |
+| `release.yaml`   | Push to `main` touching `charts/**` | [chart-releaser](https://github.com/helm/chart-releaser-action) creates a `<chart>-<version>` GitHub release and updates `index.yaml` on `gh-pages`; new packages are also pushed to GHCR |
 
-Publishing uses the built-in `CI_JOB_TOKEN`, so no extra secrets are needed.
+Both workflows use the built-in `GITHUB_TOKEN`, so no secrets need to be configured.
 
-Useful CI variables:
+`KUBERNETES_VERSION` in `lint-test.yaml` sets the Kubernetes version manifests
+are validated against; keep it in sync with the cluster.
 
-- `KUBERNETES_VERSION` — version manifests are validated against; keep in sync
-  with the cluster.
-- `HELM_CHANNEL` — registry channel to publish to (default `stable`).
-- `OCI_REGISTRY` — set (e.g. `$CI_REGISTRY_IMAGE/charts`) to also push charts
-  to the GitLab container registry as OCI artifacts.
+### One-time repository setup
+
+1. Make `main` the default branch.
+2. **Settings → Actions → General → Workflow permissions**: allow
+   *Read and write permissions* (needed to create releases, push `gh-pages`
+   and publish packages).
+3. After the first release run creates the `gh-pages` branch:
+   **Settings → Pages** → *Deploy from a branch* → `gh-pages` / `/ (root)`.
+4. Optional: protect `main` and require the *Lint and test charts* check.
 
 ## Local checks
 
 ```sh
-ct lint --config ct.yaml --all          # needs chart-testing installed
-helm lint charts/*
-DRY_RUN=1 CI_API_V4_URL=... CI_PROJECT_ID=... CI_JOB_TOKEN=... scripts/publish-charts.sh
+helm lint charts/<app>
+ct lint --config ct.yaml --charts charts/<app>      # needs chart-testing
+helm template <app> charts/<app> | kubeconform -strict -ignore-missing-schemas -summary
 ```
