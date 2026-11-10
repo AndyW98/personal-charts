@@ -14,6 +14,7 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
 
 - `charts/<app>/` — one chart per app. Directory name must equal `name` in `Chart.yaml`.
 - `charts/<app>/ci/*-values.yaml` — extra value sets used by kubeconform validation and `ct install` in CI.
+- `k3s/` — docker-compose k3s node (`K3S_ROLE=server|agent`), documented in `k3s/README.md`. Not a chart; no CI.
 - `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules for `Chart.yaml`/`values.yaml`.
 - `.github/workflows/lint-test.yaml` — PRs: `ct lint`, kubeconform validation, `ct install` into kind (changed charts only).
 - `.github/workflows/release.yaml` — push to `main`: chart-releaser (GitHub releases + `gh-pages` index) and OCI push to GHCR.
