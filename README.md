@@ -30,6 +30,7 @@ version is merged to `main`, it is published to:
 │   └── <chart>/
 │       ├── Dockerfile          # published as ghcr.io/andyw98/<chart>:<appVersion>
 │       └── ci-build-args       # optional build args for the CI (kind) build
+├── k3s/                        # docker-compose k3s node (server or agent), see k3s/README.md
 ├── ct.yaml                     # chart-testing config
 ├── .yamllint.yaml              # YAML lint rules for Chart.yaml / values.yaml
 └── .github/workflows/
@@ -122,6 +123,12 @@ Some charts run an image built in this repository from `images/<chart>/Dockerfil
 3. After the first release run creates the `gh-pages` branch:
    **Settings → Pages** → *Deploy from a branch* → `gh-pages` / `/ (root)`.
 4. Optional: protect `main` and require the *Lint and test charts* check.
+
+## Running a cluster
+
+[`k3s/`](k3s) holds a `docker-compose.yml` that runs a k3s node on a Docker
+host, switchable between control-plane and agent roles with `K3S_ROLE`. See
+[`k3s/README.md`](k3s/README.md).
 
 ## Local checks
 

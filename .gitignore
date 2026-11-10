@@ -12,3 +12,7 @@ charts/*/charts/*.tgz
 .idea/
 .vscode/
 *.swp
+
+# k3s compose local state
+k3s/.env
+k3s/kubeconfig/
