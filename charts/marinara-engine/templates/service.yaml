@@ -12,8 +12,11 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: {{ include "marinara-engine.portName" . }}
       protocol: TCP
-      name: http
+      name: {{ include "marinara-engine.portName" . }}
+      {{- if .Values.tls.enabled }}
+      appProtocol: https
+      {{- end }}
   selector:
     {{- include "marinara-engine.selectorLabels" . | nindent 4 }}

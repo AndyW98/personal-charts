@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/env: {{ dict "config" .Values.config "secret" .Values.existingSecret "extraEnv" .Values.extraEnv | toJson | sha256sum }}
+        checksum/env: {{ dict "config" .Values.config "secret" .Values.existingSecret "extraEnv" .Values.extraEnv "envFile" .Values.envFile "adminSecret" .Values.adminSecret "tls" .Values.tls | toJson | sha256sum }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -37,6 +37,32 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if or .Values.envFile.content .Values.envFile.existingSecret }}
+      initContainers:
+        # Install the configured .env where the image looks for it, replacing
+        # any previous copy. The data volume keeps it writable for the app.
+        - name: install-env
+          image: {{ include "marinara-engine.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - sh
+            - -c
+            - cp /marinara-env/.env /app/data/.env && chmod 600 /app/data/.env
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: env-file
+              mountPath: /marinara-env
+              readOnly: true
+      {{- end }}
       containers:
         - name: marinara-engine
           image: {{ include "marinara-engine.image" . | quote }}
@@ -52,13 +78,30 @@ spec:
               value: /app/data
             - name: FILE_STORAGE_DIR
               value: /app/data/storage
-            # Config comes from the environment, not a .env file.
+            # The .env (if any) only changes when the pod starts.
             - name: MARINARA_ENV_WATCH
               value: "0"
+            {{- with .Values.config.logLevel }}
             - name: LOG_LEVEL
-              value: {{ .Values.config.logLevel | quote }}
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.config.logFormat }}
             - name: LOG_FORMAT
-              value: {{ .Values.config.logFormat | quote }}
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.tls.enabled }}
+            - name: SSL_CERT
+              value: /app/tls/tls.crt
+            - name: SSL_KEY
+              value: /app/tls/tls.key
+            {{- end }}
+            {{- if or .Values.adminSecret.generate .Values.adminSecret.existingSecret }}
+            - name: ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.adminSecret.existingSecret | default (printf "%s-admin" (include "marinara-engine.fullname" .)) }}
+                  key: {{ .Values.adminSecret.key }}
+            {{- end }}
             {{- with .Values.config.timezone }}
             - name: TZ
               value: {{ . | quote }}
@@ -93,20 +136,14 @@ spec:
             {{- end }}
           {{- end }}
           ports:
-            - name: http
+            - name: {{ include "marinara-engine.portName" . }}
               containerPort: 7860
               protocol: TCP
-          {{- with .Values.startupProbe }}
-          startupProbe:
-            {{- toYaml . | nindent 12 }}
+          {{- range $probe := list "startupProbe" "livenessProbe" "readinessProbe" }}
+          {{- with index $.Values $probe }}
+          {{ $probe }}:
+            {{- include "marinara-engine.probe" (dict "probe" . "root" $) | nindent 12 }}
           {{- end }}
-          {{- with .Values.livenessProbe }}
-          livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.readinessProbe }}
-          readinessProbe:
-            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- with .Values.resources }}
           resources:
@@ -117,6 +154,11 @@ spec:
               mountPath: /app/data
             - name: tmp
               mountPath: /tmp
+            {{- if .Values.tls.enabled }}
+            - name: tls
+              mountPath: /app/tls
+              readOnly: true
+            {{- end }}
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -130,6 +172,22 @@ spec:
           {{- end }}
         - name: tmp
           emptyDir: {}
+        {{- if or .Values.envFile.content .Values.envFile.existingSecret }}
+        - name: env-file
+          secret:
+            secretName: {{ .Values.envFile.existingSecret | default (printf "%s-env" (include "marinara-engine.fullname" .)) }}
+            # Readable by the pod's fsGroup.
+            defaultMode: 0440
+            items:
+              - key: {{ .Values.envFile.key }}
+                path: .env
+        {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ include "marinara-engine.tlsSecretName" . }}
+            defaultMode: 0440
+        {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

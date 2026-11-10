@@ -1,0 +1,31 @@
+# .env file from inline content, generated ADMIN_SECRET, built-in HTTPS with a
+# chart-generated self-signed certificate, and cert-manager ingress annotations
+# (only an annotation here, so no cert-manager is needed in kind).
+persistence:
+  enabled: false
+config:
+  # Leave LOG_LEVEL to the .env file.
+  logLevel: ""
+envFile:
+  content: |
+    LOG_LEVEL=info
+    LOG_PRESET=default
+    MARINARA_NOTICES_ENABLED=false
+adminSecret:
+  generate: true
+tls:
+  enabled: true
+  dnsNames:
+    - marinara.internal.example
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  hosts:
+    - host: marinara.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  certManager:
+    enabled: true
+    clusterIssuer: letsencrypt

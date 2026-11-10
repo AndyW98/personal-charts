@@ -31,8 +31,9 @@ config:
   # IANA timezone used by server-side schedules, e.g. "Europe/London".
   timezone: ""
   # error | warn | info | debug (debug logs full prompts and responses).
+  # Set to "" to leave LOG_LEVEL to the .env file (see envFile).
   logLevel: warn
-  # "json" (default for containers) or "pretty".
+  # "json" (default for containers) or "pretty". "" leaves it to the .env file.
   logFormat: json
   # Extra hostnames accepted by Marinara's Host-header check. Ingress hosts
   # are added automatically.
@@ -48,7 +49,7 @@ config:
   env: {}
 
 # Name of an existing Secret whose keys are all loaded as environment
-# variables. Use it for the sensitive settings, for example:
+# variables (an alternative to envFile for individual settings), for example:
 #   ADMIN_SECRET      - required for privileged APIs from non-loopback clients
 #   BASIC_AUTH_USER   - login username (both user and pass must be set)
 #   BASIC_AUTH_PASS   - login password
@@ -59,6 +60,39 @@ config:
 # create a login in the app: via `kubectl port-forward` (counts as loopback) or
 # with the one-time setup code printed in the pod logs.
 existingSecret: ""
+
+# ── .env file ──────────────────────────────────────────────────────────────
+# Marinara reads its server configuration from a .env file (KEY=value lines,
+# see the upstream .env.example). In the container it lives at /app/data/.env.
+# When a source is set here, an init container copies it to /app/data/.env on
+# every pod start, replacing whatever was there. Leave both empty to keep the
+# .env that Marinara creates (and that you can edit) in the data volume.
+#
+# Precedence: environment variables win over .env entries, so anything the
+# chart sets (config.*, PORT, HOST, adminSecret, existingSecret, extraEnv)
+# overrides the same key in the file.
+envFile:
+  # Inline .env contents, stored in a Secret the chart creates. Keep real
+  # secrets out of git, e.g. `--set-file envFile.content=./marinara.env`.
+  content: ""
+  # Or an existing Secret that holds the whole .env file under `key`.
+  existingSecret: ""
+  key: .env
+
+# ── Admin secret ───────────────────────────────────────────────────────────
+# ADMIN_SECRET gates privileged APIs (backups, imports, cleanup, sidecar
+# installs, ...) for non-loopback clients. When set here it is passed as an
+# env var, so it wins over ADMIN_SECRET in the .env file and in existingSecret.
+adminSecret:
+  # Existing Secret holding the admin secret under `key`.
+  existingSecret: ""
+  key: ADMIN_SECRET
+  # Let the chart create a Secret named "<fullname>-admin" with a random
+  # 64-char hex value. The value is kept on upgrades (looked up from the
+  # cluster; tools that render without cluster access, like `helm template`,
+  # generate a new one each time). Read it with:
+  #   kubectl get secret <fullname>-admin -o jsonpath='{.data.ADMIN_SECRET}' | base64 -d
+  generate: false
 
 # Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
 extraEnv: []
@@ -101,6 +135,46 @@ ingress:
   #  - secretName: marinara-tls
   #    hosts:
   #      - marinara.example.com
+  # Have cert-manager issue the ingress certificate (ingress-shim). Adds the
+  # issuer annotation and, when `tls` above is empty, a TLS entry covering all
+  # ingress hosts with secret `secretName` (default "<fullname>-ingress-tls").
+  certManager:
+    enabled: false
+    # Set exactly one of these.
+    clusterIssuer: ""
+    issuer: ""
+    secretName: ""
+
+# ── Built-in TLS ───────────────────────────────────────────────────────────
+# Serve HTTPS from Marinara itself (SSL_CERT / SSL_KEY), for end-to-end TLS
+# behind an ingress or when exposing the Service directly. The certificate
+# comes from, in order: `existingSecret`, a cert-manager Certificate
+# (`certManager.enabled`), or else a self-signed certificate the chart
+# generates (kept on upgrades like adminSecret.generate).
+# Marinara reads the certificate only at startup; restart the pod after a
+# renewal, e.g. with stakater/reloader via podAnnotations.
+# Behind ingress-nginx also set the annotation
+#   nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+tls:
+  enabled: false
+  # Existing kubernetes.io/tls Secret (tls.crt / tls.key).
+  existingSecret: ""
+  # Extra DNS names for the certificate. The Service names
+  # (<fullname>, <fullname>.<namespace>, ...svc, ...svc.cluster.local) and the
+  # ingress hosts are always included.
+  dnsNames: []
+  certManager:
+    # Requires cert-manager's CRDs in the cluster.
+    enabled: false
+    issuerRef:
+      name: ""
+      # Issuer or ClusterIssuer.
+      kind: ClusterIssuer
+      group: cert-manager.io
+    duration: ""
+    renewBefore: ""
+  # Validity of the generated self-signed certificate, in days.
+  selfSignedDays: 3650
 
 # ── Pod ────────────────────────────────────────────────────────────────────
 podAnnotations: {}

@@ -7,7 +7,17 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "marinara-engine.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- $annotations := deepCopy (.Values.ingress.annotations | default dict) }}
+  {{- with .Values.ingress.certManager }}
+  {{- if .enabled }}
+  {{- if .clusterIssuer }}
+  {{- $_ := set $annotations "cert-manager.io/cluster-issuer" .clusterIssuer }}
+  {{- else }}
+  {{- $_ := set $annotations "cert-manager.io/issuer" .issuer }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- with $annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
@@ -15,7 +25,7 @@ spec:
   {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}
   {{- end }}
-  {{- with .Values.ingress.tls }}
+  {{- with (include "marinara-engine.ingressTls" . | fromYamlArray) }}
   tls:
     {{- range . }}
     - hosts:

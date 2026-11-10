@@ -2,7 +2,7 @@ apiVersion: v2
 name: marinara-engine
 description: Marinara Engine - a self-hosted, AI-powered chat, roleplay and game engine
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "2.5.2"
 home: https://github.com/Pasta-Devs/Marinara-Engine
 sources:

@@ -1,0 +1,28 @@
+{{- if and .Values.tls.enabled .Values.tls.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "marinara-engine.fullname" . }}-server
+  labels:
+    {{- include "marinara-engine.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "marinara-engine.tlsSecretName" . }}
+  secretTemplate:
+    labels:
+      {{- include "marinara-engine.labels" . | nindent 6 }}
+  commonName: {{ include "marinara-engine.fullname" . | quote }}
+  dnsNames:
+    {{- include "marinara-engine.tlsDnsNames" . | nindent 4 }}
+  {{- with .Values.tls.certManager.duration }}
+  duration: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.tls.certManager.renewBefore }}
+  renewBefore: {{ . | quote }}
+  {{- end }}
+  privateKey:
+    rotationPolicy: Always
+  issuerRef:
+    name: {{ .Values.tls.certManager.issuerRef.name | quote }}
+    kind: {{ .Values.tls.certManager.issuerRef.kind | quote }}
+    group: {{ .Values.tls.certManager.issuerRef.group | quote }}
+{{- end }}
