@@ -1,0 +1,75 @@
+name: Build foundryvtt image
+
+# Builds images/foundryvtt with the real Foundry release and pushes
+# ghcr.io/<owner>/foundryvtt:<appVersion>. Foundry downloads need a short-lived
+# URL from your foundryvtt.com account, so this only runs on demand:
+#
+#   1. Bump appVersion in charts/foundryvtt/Chart.yaml (and the chart version)
+#      if you are upgrading, and merge it.
+#   2. On foundryvtt.com -> Purchased Licenses, pick that version, the
+#      "Node.js" build, and copy the "Timed URL".
+#   3. gh secret set FOUNDRY_DOWNLOAD_URL --repo AndyW98/personal-charts --body '<timed url>'
+#      gh workflow run foundryvtt-image.yaml --repo AndyW98/personal-charts
+#
+# The URL stays in a secret (masked, never a build arg) because this repo's
+# Actions runs are public.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check download URL
+        env:
+          FOUNDRY_URL: ${{ secrets.FOUNDRY_DOWNLOAD_URL }}
+        run: |
+          if [ -z "$FOUNDRY_URL" ]; then
+            echo "::error::Set the FOUNDRY_DOWNLOAD_URL secret to a fresh Foundry timed URL first."
+            exit 1
+          fi
+
+      - name: Resolve tags
+        id: meta
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          repo="ghcr.io/${owner}/foundryvtt"
+          version="$(yq '.appVersion' charts/foundryvtt/Chart.yaml)"
+          {
+            echo "version=$version"
+            echo "tags<<EOF"
+            echo "$repo:$version"
+            echo "$repo:latest"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: images/foundryvtt
+          platforms: linux/amd64
+          build-args: APP_VERSION=${{ steps.meta.outputs.version }}
+          secrets: |
+            foundry_url=${{ secrets.FOUNDRY_DOWNLOAD_URL }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}

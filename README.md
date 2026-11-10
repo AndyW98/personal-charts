@@ -16,7 +16,7 @@ version is merged to `main`, it is published to:
 | [`docker-registry`](charts/docker-registry) | [Distribution](https://distribution.github.io/distribution/) | Private Docker / OCI image registry |
 | [`dokuwiki`](charts/dokuwiki) | [DokuWiki](https://www.dokuwiki.org) | Database-free wiki (LinuxServer.io image) |
 | [`filerise`](charts/filerise) | [FileRise](https://github.com/error311/FileRise) | Web file manager |
-| [`foundryvtt`](charts/foundryvtt) | [Foundry VTT](https://foundryvtt.com) | Virtual tabletop (privately built image) |
+| [`foundryvtt`](charts/foundryvtt) | [Foundry VTT](https://foundryvtt.com) | Virtual tabletop (image from `images/foundryvtt`, built on demand) |
 | [`gitea`](charts/gitea) | [Gitea](https://gitea.com) | Lightweight Git service, single pod |
 | [`heimdall`](charts/heimdall) | [Heimdall](https://heimdall.site) | Application dashboard (LinuxServer.io image) |
 | [`homelab-core`](charts/homelab-core) | — | cert-manager ClusterIssuer/Certificates, shared PersistentVolumes, extra objects |

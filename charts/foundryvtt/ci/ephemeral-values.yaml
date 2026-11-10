@@ -1,4 +1,8 @@
 # Ephemeral data, NodePort service.
+# CI: placeholder image (FOUNDRY_STUB) built from images/foundryvtt and loaded into kind.
+image:
+  tag: ci
+  pullPolicy: Never
 persistence:
   data:
     enabled: false

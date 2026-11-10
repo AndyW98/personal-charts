@@ -1,0 +1,3 @@
+Built only by .github/workflows/foundryvtt-image.yaml (manual dispatch with a
+Foundry download URL), not by images.yaml. lint-test.yaml still builds the
+FOUNDRY_STUB placeholder from ci-build-args for `ct install`.
