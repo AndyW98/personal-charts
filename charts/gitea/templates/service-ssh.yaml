@@ -1,0 +1,24 @@
+{{- if .Values.ssh.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gitea.fullname" . }}-ssh
+  labels:
+    {{- include "gitea.labels" . | nindent 4 }}
+  {{- with .Values.ssh.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.ssh.service.type }}
+  ports:
+    - port: {{ .Values.ssh.service.port }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+      {{- if and (eq .Values.ssh.service.type "NodePort") .Values.ssh.service.nodePort }}
+      nodePort: {{ .Values.ssh.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "gitea.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,32 @@
+{{- range .Values.certificates }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "homelab-core.labels" $ | nindent 4 }}
+spec:
+  secretName: {{ .secretName | default .name }}
+  {{- with .commonName }}
+  commonName: {{ . | quote }}
+  {{- end }}
+  dnsNames:
+    {{- range .dnsNames }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- with .duration }}
+  duration: {{ . }}
+  {{- end }}
+  {{- with .renewBefore }}
+  renewBefore: {{ . }}
+  {{- end }}
+  issuerRef:
+    {{- with .issuerRef }}
+    name: {{ .name }}
+    kind: {{ .kind | default "ClusterIssuer" }}
+    {{- else }}
+    name: {{ $.Values.clusterIssuer.name }}
+    kind: ClusterIssuer
+    {{- end }}
+{{- end }}

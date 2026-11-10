@@ -1,0 +1,237 @@
+# Default values for romm.
+# https://docs.romm.app/latest/Getting-Started/Environment-Variables/
+
+image:
+  repository: docker.io/rommapp/romm
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# ── Database ───────────────────────────────────────────────────────────────
+# Bundled single-pod MariaDB. Set enabled: false to use externalDatabase.
+mariadb:
+  enabled: true
+  image:
+    repository: docker.io/library/mariadb
+    # Never set this lower than the version that last wrote the data directory.
+    tag: "12.3"
+    pullPolicy: IfNotPresent
+  auth:
+    database: romm
+    username: romm
+    # Existing Secret with keys mariadb-root-password and mariadb-password.
+    # When empty, the chart creates "<fullname>-mariadb" with random passwords
+    # that are kept across upgrades.
+    existingSecret: ""
+  persistence:
+    enabled: true
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+    retain: true
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# Used when mariadb.enabled is false.
+externalDatabase:
+  host: ""
+  port: 3306
+  database: romm
+  username: romm
+  # Existing Secret holding the password under passwordKey.
+  existingSecret: ""
+  passwordKey: mariadb-password
+
+# ── App configuration ──────────────────────────────────────────────────────
+# Plain (non-secret) environment variables, as NAME: value.
+env: {}
+  # Any other RomM setting, e.g.
+  # ENABLE_SCHEDULED_RESCAN: "true"
+  # SCHEDULED_RESCAN_CRON: "0 3 * * *"
+  # HASHEOUS_API_ENABLED: "true"
+# Secrets: an existing Secret loaded as env vars. It must contain
+# ROMM_AUTH_SECRET_KEY (openssl rand -hex 32) and may add metadata provider
+# credentials (SCREENSCRAPER_USER, SCREENSCRAPER_PASSWORD, RETROACHIEVEMENTS_API_KEY,
+# STEAMGRIDDB_API_KEY, IGDB_CLIENT_ID, IGDB_CLIENT_SECRET, ...). When empty, the
+# chart creates "<fullname>-app" with a random ROMM_AUTH_SECRET_KEY that is kept
+# across upgrades.
+# Name of an existing Secret whose keys are all loaded as environment variables.
+existingSecret: ""
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# Each entry becomes a volume mounted at mountPath. Per entry:
+#   enabled        false -> emptyDir (data is lost when the pod goes away)
+#   existingClaim  mount a pre-created PVC instead of creating one
+#   hostPath       mount a directory on the node instead of a PVC (pin the pod
+#                  with nodeSelector); handy for reusing existing data in place
+#   hostPathType   hostPath type (default DirectoryOrCreate)
+#   subPath        mount only this subdirectory of the volume
+#   storageClass   "-" for no class; "" for the cluster default
+#   volumeName     bind the chart-created PVC to a specific pre-created PV
+#   retain         keep the chart-created PVC on `helm uninstall`
+persistence:
+  # Game library (roms/, bios/). Usually an existingClaim or hostPath.
+  library:
+    enabled: true
+    mountPath: /romm/library
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+    retain: true
+  # Covers, screenshots and other fetched metadata.
+  resources:
+    enabled: true
+    mountPath: /romm/resources
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+    retain: true
+  # Uploaded saves, states and screenshots.
+  assets:
+    enabled: true
+    mountPath: /romm/assets
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+    retain: true
+  # config.yml.
+  config:
+    enabled: true
+    mountPath: /romm/config
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 100Mi
+    retain: true
+  # Background task data for the bundled Redis.
+  redis-data:
+    enabled: true
+    mountPath: /redis-data
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    retain: true
+# Extra volumes / mounts, e.g. a shared backup or SMB PVC.
+extraVolumes: []
+extraVolumeMounts: []
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  # Only used when type is NodePort.
+  nodePort: ""
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: romm.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: romm-tls
+  #    hosts:
+  #      - romm.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# The image starts as root to prepare its directories.
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
+startupProbe:
+  httpGet:
+    path: /api/heartbeat
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+livenessProbe:
+  httpGet:
+    path: /api/heartbeat
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /api/heartbeat
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

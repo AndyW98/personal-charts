@@ -1,0 +1,151 @@
+# Default values for foundryvtt.
+# The image bundles a licensed Foundry VTT build, so it is built outside this
+# repo (see the homelab repo's foundry/Dockerfile) and pulled from Docker Hub.
+
+image:
+  repository: docker.io/andyw98/foundryvtt
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# Copy Foundry's own backups (<data>/Backups) to another volume on a schedule.
+backup:
+  enabled: false
+  schedule: "0 3 * * *"
+  # Directory inside the data volume to copy.
+  sourceSubPath: Backups
+  # Destination volume: a pre-created PVC (and optional subPath in it).
+  destination:
+    existingClaim: ""
+    subPath: ""
+  image:
+    repository: docker.io/library/busybox
+    tag: "1.37"
+    pullPolicy: IfNotPresent
+
+# ── App configuration ──────────────────────────────────────────────────────
+# Plain (non-secret) environment variables, as NAME: value.
+env: {}
+# Name of an existing Secret whose keys are all loaded as environment variables.
+existingSecret: ""
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# Each entry becomes a volume mounted at mountPath. Per entry:
+#   enabled        false -> emptyDir (data is lost when the pod goes away)
+#   existingClaim  mount a pre-created PVC instead of creating one
+#   hostPath       mount a directory on the node instead of a PVC (pin the pod
+#                  with nodeSelector); handy for reusing existing data in place
+#   hostPathType   hostPath type (default DirectoryOrCreate)
+#   subPath        mount only this subdirectory of the volume
+#   storageClass   "-" for no class; "" for the cluster default
+#   volumeName     bind the chart-created PVC to a specific pre-created PV
+#   retain         keep the chart-created PVC on `helm uninstall`
+persistence:
+  # Foundry user data: Config/, Data/ (worlds, systems, modules), Logs/, Backups/.
+  data:
+    enabled: true
+    mountPath: /foundrydata
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 30Gi
+    retain: true
+# Extra volumes / mounts, e.g. a shared backup or SMB PVC.
+extraVolumes: []
+extraVolumeMounts: []
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  # Only used when type is NodePort.
+  nodePort: ""
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: foundry.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: foundryvtt-tls
+  #    hosts:
+  #      - foundry.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# The image runs Foundry under pm2 as whatever user the pod runs as; node:slim
+# provides the "node" user (1000). fsGroup makes PVCs writable; hostPath data
+# must already be owned by runAsUser.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    memory: 2Gi
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

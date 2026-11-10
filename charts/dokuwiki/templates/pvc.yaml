@@ -1,0 +1,32 @@
+{{- range $name, $p := .Values.persistence }}
+{{- if and $p.enabled (not $p.existingClaim) (not $p.hostPath) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "dokuwiki.claimName" (dict "root" $ "name" $name "p" $p) }}
+  labels:
+    {{- include "dokuwiki.labels" $ | nindent 4 }}
+  {{- if or $p.retain $p.annotations }}
+  annotations:
+    {{- if $p.retain }}
+    helm.sh/resource-policy: keep
+    {{- end }}
+    {{- with $p.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml ($p.accessModes | default (list "ReadWriteOnce")) | nindent 4 }}
+  {{- with $p.storageClass }}
+  storageClassName: {{ if eq . "-" }}""{{ else }}{{ . | quote }}{{ end }}
+  {{- end }}
+  {{- with $p.volumeName }}
+  volumeName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $p.size | quote }}
+{{- end }}
+{{- end }}

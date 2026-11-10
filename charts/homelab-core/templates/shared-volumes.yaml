@@ -1,0 +1,66 @@
+{{- range $key, $v := .Values.sharedVolumes }}
+{{- $pvName := $v.pvName | default $key }}
+{{- $storageClass := $v.storageClassName | default "manual" }}
+{{- $accessModes := $v.accessModes | default (list "ReadWriteOnce") }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $pvName }}
+  labels:
+    {{- include "homelab-core.labels" $ | nindent 4 }}
+  annotations:
+    # Never delete the backing data with the release.
+    helm.sh/resource-policy: keep
+    {{- with $v.csi }}
+    pv.kubernetes.io/provisioned-by: {{ .driver }}
+    {{- end }}
+spec:
+  capacity:
+    storage: {{ required (printf "sharedVolumes.%s.size is required" $key) $v.size | quote }}
+  accessModes:
+    {{- toYaml $accessModes | nindent 4 }}
+  persistentVolumeReclaimPolicy: {{ $v.reclaimPolicy | default "Retain" }}
+  storageClassName: {{ $storageClass }}
+  {{- with $v.mountOptions }}
+  mountOptions:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if $v.hostPath }}
+  hostPath:
+    path: {{ $v.hostPath.path | quote }}
+    type: {{ $v.hostPath.type | default "DirectoryOrCreate" }}
+  {{- else if $v.csi }}
+  csi:
+    driver: {{ $v.csi.driver }}
+    volumeHandle: {{ $v.csi.volumeHandle | quote }}
+    {{- with $v.csi.volumeAttributes }}
+    volumeAttributes:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $v.csi.nodeStageSecretRef }}
+    nodeStageSecretRef:
+      name: {{ .name }}
+      namespace: {{ .namespace | default $.Release.Namespace }}
+    {{- end }}
+  {{- else }}
+  {{- fail (printf "sharedVolumes.%s needs hostPath or csi" $key) }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $v.claimName | default $key }}
+  labels:
+    {{- include "homelab-core.labels" $ | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    {{- toYaml $accessModes | nindent 4 }}
+  storageClassName: {{ $storageClass }}
+  volumeName: {{ $pvName }}
+  resources:
+    requests:
+      storage: {{ $v.size | quote }}
+{{- end }}

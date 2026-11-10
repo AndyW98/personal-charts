@@ -13,6 +13,8 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
 ## Layout
 
 - `charts/<app>/` — one chart per app. Directory name must equal `name` in `Chart.yaml`.
+- `charts/homelab-core/` — the one non-app chart: cert-manager ClusterIssuer/Certificates, shared static PVs + PVCs,
+  `extraObjects`. Everything off by default (cert-manager CRDs aren't in kind).
 - `charts/<app>/ci/*-values.yaml` — extra value sets used by kubeconform validation and `ct install` in CI.
 - `k3s/` — docker-compose k3s node (`K3S_ROLE=server|agent`), documented in `k3s/README.md`. Not a chart; no CI.
 - `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules for `Chart.yaml`/`values.yaml`.

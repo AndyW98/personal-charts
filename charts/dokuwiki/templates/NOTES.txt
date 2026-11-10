@@ -1,0 +1,16 @@
+DokuWiki {{ include "dokuwiki.imageTag" . }} is deploying.
+
+{{- if .Values.ingress.enabled }}
+
+Open:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Open it with a port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "dokuwiki.fullname" . }} 8080:{{ .Values.service.port }}
+  then browse to http://127.0.0.1:8080
+{{- end }}
+
+On a fresh /config, finish setup at /install.php.

@@ -1,0 +1,15 @@
+# Defaults with chart-managed PVCs that are removed on uninstall.
+persistence:
+  library:
+    retain: false
+  resources:
+    retain: false
+  assets:
+    retain: false
+  config:
+    retain: false
+  redis-data:
+    retain: false
+mariadb:
+  persistence:
+    retain: false

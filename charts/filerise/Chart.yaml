@@ -1,0 +1,19 @@
+apiVersion: v2
+name: filerise
+description: FileRise - self-hosted web file manager
+type: application
+version: 0.1.0
+appVersion: "v3.42.0"
+home: https://github.com/error311/FileRise
+sources:
+  - https://github.com/error311/FileRise
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - files
+  - file-manager
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: MIT

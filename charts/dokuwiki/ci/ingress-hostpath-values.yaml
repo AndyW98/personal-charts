@@ -1,0 +1,18 @@
+# hostPath data, ingress with TLS, NodePort service.
+persistence:
+  config:
+    hostPath: /tmp/dokuwiki-ci
+service:
+  type: NodePort
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: wiki.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: wiki-tls
+      hosts:
+        - wiki.example.com

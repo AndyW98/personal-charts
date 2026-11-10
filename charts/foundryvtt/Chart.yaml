@@ -1,0 +1,17 @@
+apiVersion: v2
+name: foundryvtt
+description: Foundry Virtual Tabletop from a privately built image
+type: application
+version: 0.1.0
+appVersion: "14.359"
+home: https://foundryvtt.com
+sources:
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - vtt
+  - tabletop
+  - games
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98

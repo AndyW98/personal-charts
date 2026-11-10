@@ -1,0 +1,16 @@
+# Shared hostPath volume plus an extra object (no CRDs needed in kind).
+sharedVolumes:
+  backup:
+    pvName: ci-backup-volume
+    claimName: ci-backup-claim
+    size: 1Gi
+    hostPath:
+      path: /tmp/homelab-core-ci
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: homelab-core-ci
+      namespace: "{{ .Release.Namespace }}"
+    data:
+      hello: world

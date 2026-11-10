@@ -1,0 +1,16 @@
+Jellyfin {{ include "jellyfin.imageTag" . }} is deploying.
+
+{{- if .Values.ingress.enabled }}
+
+Open:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Open it with a port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "jellyfin.fullname" . }} 8096:{{ .Values.service.port }}
+  then browse to http://127.0.0.1:8096
+{{- end }}
+
+On first start, the setup wizard creates the admin account.

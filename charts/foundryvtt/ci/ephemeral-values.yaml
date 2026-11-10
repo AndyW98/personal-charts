@@ -1,0 +1,7 @@
+# Ephemeral data, NodePort service.
+persistence:
+  data:
+    enabled: false
+service:
+  type: NodePort
+  nodePort: 30080

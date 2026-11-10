@@ -1,0 +1,10 @@
+# Media as a read-only emptyDir, cache disabled, hostPort exposed.
+hostPort: 8096
+persistence:
+  config:
+    retain: false
+  cache:
+    enabled: false
+  media:
+    enabled: false
+    readOnly: true
