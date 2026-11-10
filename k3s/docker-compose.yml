@@ -5,6 +5,9 @@ name: k3s
 services:
   k3s:
     image: rancher/k3s:${K3S_VERSION:-v1.31.14-k3s1}
+    # Empty = the host's native architecture. linux/amd64 on an ARM host runs
+    # the whole node (and its pods) as x86-64 under QEMU; see README.md.
+    platform: ${K3S_PLATFORM:-}
     container_name: k3s-${K3S_ROLE:-server}
     # "server" = control plane (also runs workloads), "agent" = worker only.
     command: ${K3S_ROLE:-server} ${K3S_EXTRA_ARGS:-}
