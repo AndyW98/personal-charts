@@ -27,6 +27,197 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/argentum-engine-0.1.0/argentum-engine-0.1.0.tgz
     version: 0.1.0
+  docker-registry:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: 3.1.2
+    created: "2026-11-11T00:43:56.221516984Z"
+    description: Docker / OCI image registry (CNCF Distribution)
+    digest: 7373396c80548cd69ebc49ab3105f626528116b979be5f34905a0c7161ef7d04
+    home: https://distribution.github.io/distribution/
+    keywords:
+    - registry
+    - oci
+    - docker
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: docker-registry
+    sources:
+    - https://github.com/distribution/distribution
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/docker-registry-0.1.0/docker-registry-0.1.0.tgz
+    version: 0.1.0
+  dokuwiki:
+  - annotations:
+      artifacthub.io/license: GPL-2.0-only
+    apiVersion: v2
+    appVersion: 2026-07-14c-ls333
+    created: "2026-11-11T00:43:56.366159733Z"
+    description: DokuWiki - simple, database-free wiki (LinuxServer.io image)
+    digest: 8c13cff1a17fbb8e1049300f810e6e901fbfef6fcdc73222a7b2c99ae9e63364
+    home: https://www.dokuwiki.org
+    keywords:
+    - wiki
+    - dokuwiki
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: dokuwiki
+    sources:
+    - https://github.com/linuxserver/docker-dokuwiki
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/dokuwiki-0.1.0/dokuwiki-0.1.0.tgz
+    version: 0.1.0
+  filerise:
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: v3.42.0
+    created: "2026-11-11T00:43:56.52746307Z"
+    description: FileRise - self-hosted web file manager
+    digest: 53a5bb3359a66236c5b8b360de942a17fbae5c248d0dfe74a544ebd3078b1a96
+    home: https://github.com/error311/FileRise
+    keywords:
+    - files
+    - file-manager
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: filerise
+    sources:
+    - https://github.com/error311/FileRise
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/filerise-0.1.0/filerise-0.1.0.tgz
+    version: 0.1.0
+  foundryvtt:
+  - apiVersion: v2
+    appVersion: "14.359"
+    created: "2026-11-11T00:43:56.688429031Z"
+    description: Foundry Virtual Tabletop, from an image built in this repo
+    digest: 6e4c633af2854b82c89f0d8f8c676400d5c179e62fe2b0951247e0d89d3d694d
+    home: https://foundryvtt.com
+    keywords:
+    - vtt
+    - tabletop
+    - games
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: foundryvtt
+    sources:
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/foundryvtt-0.1.0/foundryvtt-0.1.0.tgz
+    version: 0.1.0
+  gitea:
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 28.3.0
+    created: "2026-11-11T00:43:56.848159868Z"
+    description: Gitea - lightweight self-hosted Git service (single pod, rootful
+      image)
+    digest: 616eb1b4e39b22f1a250e32f75ec20f9688d26fd237a877523a4434e96531fd9
+    home: https://about.gitea.com
+    keywords:
+    - git
+    - scm
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: gitea
+    sources:
+    - https://github.com/go-gitea/gitea
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/gitea-0.1.0/gitea-0.1.0.tgz
+    version: 0.1.0
+  heimdall:
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: v2.8.4-ls372
+    created: "2026-11-11T00:43:57.002975483Z"
+    description: Heimdall - application dashboard (LinuxServer.io image)
+    digest: 602e6241719827a66e122e72ed942cf0067238265a9238c0f53327bd20456c9f
+    home: https://heimdall.site
+    keywords:
+    - dashboard
+    - homepage
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: heimdall
+    sources:
+    - https://github.com/linuxserver/Heimdall
+    - https://github.com/linuxserver/docker-heimdall
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/heimdall-0.1.0/heimdall-0.1.0.tgz
+    version: 0.1.0
+  homelab-core:
+  - apiVersion: v2
+    created: "2026-11-11T00:43:57.166498805Z"
+    description: Cluster-level pieces shared by the homelab apps - cert-manager issuer
+      and certificates, shared PersistentVolumes and arbitrary extra objects
+    digest: d9b18c9c059ba075e526a17a757fda539bfe657eb558ea6f01919fca8652f255
+    keywords:
+    - homelab
+    - cert-manager
+    - storage
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: homelab-core
+    sources:
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/homelab-core-0.1.0/homelab-core-0.1.0.tgz
+    version: 0.1.0
+  jellyfin:
+  - annotations:
+      artifacthub.io/license: GPL-2.0-only
+    apiVersion: v2
+    appVersion: 12.4ubu2604-ls59
+    created: "2026-11-11T00:43:57.331926415Z"
+    description: Jellyfin - free software media server (LinuxServer.io image)
+    digest: 2bcdd5e44320ec513eb1bcb0aa62c5ed2035d6b91ec235a7c67904f1a2e82b9f
+    home: https://jellyfin.org
+    keywords:
+    - media
+    - streaming
+    - jellyfin
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: jellyfin
+    sources:
+    - https://github.com/jellyfin/jellyfin
+    - https://github.com/linuxserver/docker-jellyfin
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/jellyfin-0.1.0/jellyfin-0.1.0.tgz
+    version: 0.1.0
   marinara-engine:
   - annotations:
       artifacthub.io/license: AGPL-3.0-only
@@ -104,4 +295,29 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/opencode-kali-0.1.0/opencode-kali-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-11T00:40:46.564322415Z"
+  romm:
+  - annotations:
+      artifacthub.io/license: AGPL-3.0-only
+    apiVersion: v2
+    appVersion: 5.4.1
+    created: "2026-11-11T00:43:57.474392859Z"
+    description: RomM - ROM manager and web emulator, with an optional bundled MariaDB
+    digest: 4c8235380f7f6ffbb786c969a2077ca90dcc4a36fbeefb35949a115381385830
+    home: https://romm.app
+    keywords:
+    - emulation
+    - roms
+    - games
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: romm
+    sources:
+    - https://github.com/rommapp/romm
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/romm-0.1.0/romm-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-11-11T00:43:57.474404972Z"
