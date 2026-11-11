@@ -3,14 +3,38 @@ Marinara Engine {{ include "marinara-engine.imageTag" . }} is deploying.
 {{- if .Values.ingress.enabled }}
 
 Open:
+{{- $tlsHosts := list }}
+{{- range (include "marinara-engine.ingressTls" . | fromYamlArray) }}{{ $tlsHosts = concat $tlsHosts (.hosts | default list) }}{{ end }}
 {{- range .Values.ingress.hosts }}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+  http{{ if has .host $tlsHosts }}s{{ end }}://{{ .host }}
 {{- end }}
 {{- else }}
 
 Open it with a port-forward (connections arrive as loopback, so no login is needed):
   kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "marinara-engine.fullname" . }} 7860:{{ .Values.service.port }}
-  then browse to http://127.0.0.1:7860
+  then browse to http{{ if .Values.tls.enabled }}s{{ end }}://127.0.0.1:7860
+{{- end }}
+
+{{- if .Values.tls.enabled }}
+
+Marinara serves HTTPS itself (certificate from Secret "{{ include "marinara-engine.tlsSecretName" . }}").
+{{- if and .Values.ingress.enabled (not (hasKey .Values.ingress.annotations "nginx.ingress.kubernetes.io/backend-protocol")) }}
+Make sure the ingress controller talks HTTPS to the backend, e.g. for ingress-nginx:
+  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+{{- end }}
+{{- if and (not .Values.tls.existingSecret) (not .Values.tls.certManager.enabled) }}
+The certificate is self-signed.
+{{- end }}
+{{- end }}
+{{- if or .Values.envFile.content .Values.envFile.existingSecret }}
+
+The configured .env is copied to /app/data/.env on every pod start
+(environment variables set by the chart win over the same keys in it).
+{{- end }}
+{{- if .Values.adminSecret.generate }}
+
+Admin secret (for privileged actions from remote devices):
+  kubectl -n {{ .Release.Namespace }} get secret {{ include "marinara-engine.fullname" . }}-admin -o jsonpath='{.data.{{ .Values.adminSecret.key }}}' | base64 -d
 {{- end }}
 
 Access control:

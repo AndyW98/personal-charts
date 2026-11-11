@@ -21,8 +21,11 @@ spec:
       command:
         - wget
         - -q
+        {{- if .Values.tls.enabled }}
+        - --no-check-certificate
+        {{- end }}
         - -O-
-        - "http://{{ include "marinara-engine.fullname" . }}:{{ .Values.service.port }}/api/health"
+        - "{{ include "marinara-engine.portName" . }}://{{ include "marinara-engine.fullname" . }}:{{ .Values.service.port }}/api/health"
       securityContext:
         allowPrivilegeEscalation: false
         readOnlyRootFilesystem: true
