@@ -1,0 +1,3 @@
+# CI cannot download Foundry (licensed, needs a timed URL), so it builds the
+# placeholder image to test the chart.
+FOUNDRY_STUB=1

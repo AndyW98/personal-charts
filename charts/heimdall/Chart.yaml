@@ -1,0 +1,20 @@
+apiVersion: v2
+name: heimdall
+description: Heimdall - application dashboard (LinuxServer.io image)
+type: application
+version: 0.1.0
+appVersion: "v2.8.4-ls372"
+home: https://heimdall.site
+sources:
+  - https://github.com/linuxserver/Heimdall
+  - https://github.com/linuxserver/docker-heimdall
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - dashboard
+  - homepage
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: MIT

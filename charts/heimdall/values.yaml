@@ -1,0 +1,128 @@
+# Default values for heimdall (LinuxServer.io image).
+# https://docs.linuxserver.io/images/docker-heimdall/
+
+image:
+  repository: lscr.io/linuxserver/heimdall
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# ── App configuration ──────────────────────────────────────────────────────
+# Plain (non-secret) environment variables, as NAME: value.
+env:
+  PUID: "1000"
+  PGID: "1000"
+  TZ: Etc/UTC
+# Name of an existing Secret whose keys are all loaded as environment variables.
+existingSecret: ""
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# Each entry becomes a volume mounted at mountPath. Per entry:
+#   enabled        false -> emptyDir (data is lost when the pod goes away)
+#   existingClaim  mount a pre-created PVC instead of creating one
+#   hostPath       mount a directory on the node instead of a PVC (pin the pod
+#                  with nodeSelector); handy for reusing existing data in place
+#   hostPathType   hostPath type (default DirectoryOrCreate)
+#   subPath        mount only this subdirectory of the volume
+#   storageClass   "-" for no class; "" for the cluster default
+#   volumeName     bind the chart-created PVC to a specific pre-created PV
+#   retain         keep the chart-created PVC on `helm uninstall`
+persistence:
+  # Dashboard database and configuration.
+  config:
+    enabled: true
+    mountPath: /config
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    retain: true
+# Extra volumes / mounts, e.g. a shared backup or SMB PVC.
+extraVolumes: []
+extraVolumeMounts: []
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  # Only used when type is NodePort.
+  nodePort: ""
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: home.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: heimdall-tls
+  #    hosts:
+  #      - home.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# LinuxServer.io images start as root (s6-overlay) to set up /config and then
+# drop to PUID/PGID, so they cannot run with runAsNonRoot or without the
+# default capabilities.
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext: {}
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

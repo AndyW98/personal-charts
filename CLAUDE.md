@@ -13,6 +13,8 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
 ## Layout
 
 - `charts/<app>/` — one chart per app. Directory name must equal `name` in `Chart.yaml`.
+- `charts/homelab-core/` — the one non-app chart: cert-manager ClusterIssuer/Certificates, shared static PVs + PVCs,
+  `extraObjects`. Everything off by default (cert-manager CRDs aren't in kind).
 - `charts/<app>/ci/*-values.yaml` — extra value sets used by kubeconform validation and `ct install` in CI.
 - `k3s/` — docker-compose k3s node (`K3S_ROLE=server|agent`), documented in `k3s/README.md`. Not a chart; no CI.
 - `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules for `Chart.yaml`/`values.yaml`.
@@ -22,6 +24,10 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
   `ghcr.io/andyw98/<chart>:<appVersion>`. The chart's `appVersion` is passed as the `APP_VERSION` build arg, so the
   Dockerfile must install that version from `ARG APP_VERSION`. `images/<chart>/ci-build-args` (KEY=value lines) slims
   the CI build that `lint-test.yaml` loads into kind as `<image.repository>:ci`.
+- `images/<chart>/manual-build` — marker that excludes the image from `images.yaml`; it has its own
+  manually dispatched workflow instead (`foundryvtt-image.yaml`: Foundry is licensed and needs a timed download URL,
+  passed as the `FOUNDRY_DOWNLOAD_URL` secret / BuildKit secret, never a build arg). Its `ci-build-args` builds a
+  no-Foundry placeholder (`FOUNDRY_STUB=1`) so `ct install` still works.
 
 ## Rules when changing charts
 

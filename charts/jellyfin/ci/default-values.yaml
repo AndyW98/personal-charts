@@ -1,0 +1,8 @@
+# Defaults with chart-managed PVCs that are removed on uninstall.
+persistence:
+  config:
+    retain: false
+  cache:
+    retain: false
+  media:
+    retain: false

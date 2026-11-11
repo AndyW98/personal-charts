@@ -1,0 +1,11 @@
+# Ephemeral storage, NodePort SSH, app.ini via env.
+persistence:
+  data:
+    enabled: false
+ssh:
+  service:
+    type: NodePort
+env:
+  USER_UID: "1000"
+  USER_GID: "1000"
+  GITEA__server__ROOT_URL: http://git.example.com/

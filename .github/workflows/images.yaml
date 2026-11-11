@@ -2,6 +2,8 @@ name: Build images
 
 # Container images for charts in this repo: images/<chart>/Dockerfile is
 # published as ghcr.io/<owner>/<chart>, tagged with the chart's appVersion.
+# Images with an images/<chart>/manual-build file are skipped here and built
+# by their own workflow.
 
 on:
   push:
@@ -36,7 +38,9 @@ jobs:
       - uses: actions/checkout@v4
       - id: list
         run: |
-          images="$(find images -mindepth 2 -maxdepth 2 -name Dockerfile -printf '%h\n' | xargs -rn1 basename | jq -Rnc '[inputs]')"
+          images="$(find images -mindepth 2 -maxdepth 2 -name Dockerfile -printf '%h\n' \
+            | while read -r dir; do [ -e "$dir/manual-build" ] || basename "$dir"; done \
+            | jq -Rnc '[inputs]')"
           echo "images=$images" >> "$GITHUB_OUTPUT"
           echo "$images"
 

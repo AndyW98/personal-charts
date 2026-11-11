@@ -1,0 +1,7 @@
+# Ephemeral storage with an extra config env var. (htpasswd auth needs a
+# pre-created Secret, so it is only covered by template validation in values.)
+persistence:
+  data:
+    enabled: false
+env:
+  REGISTRY_STORAGE_DELETE_ENABLED: "true"

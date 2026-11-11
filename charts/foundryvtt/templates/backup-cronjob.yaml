@@ -1,0 +1,79 @@
+{{- if .Values.backup.enabled }}
+{{- if not .Values.backup.destination.existingClaim }}
+{{- fail "backup.destination.existingClaim is required when backup.enabled is true" }}
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "foundryvtt.fullname" . }}-backup
+  labels:
+    {{- include "foundryvtt.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "foundryvtt.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          automountServiceAccountToken: false
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: backup
+              image: "{{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}"
+              imagePullPolicy: {{ .Values.backup.image.pullPolicy }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  src="/foundrydata/{{ .Values.backup.sourceSubPath }}"
+                  if [ -d "$src" ]; then
+                    cp -v -a "$src/." /backup/
+                  else
+                    echo "$src does not exist; nothing to copy"
+                  fi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: data
+                  mountPath: /foundrydata
+                  readOnly: true
+                  {{- with .Values.persistence.data.subPath }}
+                  subPath: {{ . }}
+                  {{- end }}
+                - name: backup
+                  mountPath: /backup
+                  {{- with .Values.backup.destination.subPath }}
+                  subPath: {{ . }}
+                  {{- end }}
+          volumes:
+            {{- include "foundryvtt.volume" (dict "root" $ "name" "data" "p" .Values.persistence.data) | nindent 12 }}
+            - name: backup
+              persistentVolumeClaim:
+                claimName: {{ .Values.backup.destination.existingClaim }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

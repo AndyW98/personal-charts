@@ -1,0 +1,139 @@
+# Default values for gitea (rootful image: /data holds config, repositories,
+# LFS, the SQLite database if used, and SSH host keys).
+# https://docs.gitea.com/installation/install-with-docker
+
+image:
+  repository: docker.io/gitea/gitea
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# Git over SSH (container port 22), as a separate Service so it can be
+# exposed as NodePort/LoadBalancer while HTTP goes through the ingress.
+ssh:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 22
+    # Only used when type is NodePort.
+    nodePort: ""
+    annotations: {}
+
+# ── App configuration ──────────────────────────────────────────────────────
+# Plain (non-secret) environment variables, as NAME: value.
+env:
+  USER_UID: "1000"
+  USER_GID: "1000"
+  # Any app.ini setting as GITEA__<section>__<KEY>, e.g.
+  # GITEA__server__ROOT_URL: https://git.example.com/
+# Name of an existing Secret whose keys are all loaded as environment variables.
+existingSecret: ""
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# Each entry becomes a volume mounted at mountPath. Per entry:
+#   enabled        false -> emptyDir (data is lost when the pod goes away)
+#   existingClaim  mount a pre-created PVC instead of creating one
+#   hostPath       mount a directory on the node instead of a PVC (pin the pod
+#                  with nodeSelector); handy for reusing existing data in place
+#   hostPathType   hostPath type (default DirectoryOrCreate)
+#   subPath        mount only this subdirectory of the volume
+#   storageClass   "-" for no class; "" for the cluster default
+#   volumeName     bind the chart-created PVC to a specific pre-created PV
+#   retain         keep the chart-created PVC on `helm uninstall`
+persistence:
+  # Everything Gitea persists.
+  data:
+    enabled: true
+    mountPath: /data
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    retain: true
+# Extra volumes / mounts, e.g. a shared backup or SMB PVC.
+extraVolumes: []
+extraVolumeMounts: []
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  # Only used when type is NodePort.
+  nodePort: ""
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: git.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: gitea-tls
+  #    hosts:
+  #      - git.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# The rootful image runs s6 + OpenSSH as root and drops to USER_UID for Gitea.
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
+startupProbe:
+  httpGet:
+    path: /api/healthz
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+livenessProbe:
+  httpGet:
+    path: /api/healthz
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /api/healthz
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

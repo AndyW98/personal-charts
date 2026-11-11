@@ -1,0 +1,68 @@
+# Default values for homelab-core. Everything is off by default.
+
+# ── cert-manager ───────────────────────────────────────────────────────────
+# Requires cert-manager (and its CRDs) to be installed.
+clusterIssuer:
+  enabled: false
+  name: letsencrypt-prod
+  server: https://acme-v02.api.letsencrypt.org/directory
+  email: ""
+  # Secret that stores the ACME account key (created by cert-manager). Must not
+  # be the same Secret as any certificate's secretName.
+  privateKeySecretName: letsencrypt-prod-account-key
+  http01:
+    enabled: true
+    ingressClassName: traefik
+  # DNS-01 via Cloudflare (needed for wildcard certificates).
+  cloudflare:
+    enabled: false
+    # Secret with a Cloudflare API token (Zone:DNS:Edit). For a ClusterIssuer it
+    # must live in cert-manager's cluster resource namespace ("cert-manager"
+    # unless --cluster-resource-namespace says otherwise).
+    apiTokenSecret:
+      name: cloudflare-api-token
+      key: api-token
+    # Limit the DNS-01 solver to these zones; empty matches everything.
+    dnsZones: []
+
+# cert-manager Certificates, created in the release namespace, e.g.
+#   - name: example-org
+#     secretName: example-org-tls
+#     commonName: example.org
+#     dnsNames: [example.org, "*.example.org"]
+#     duration: 2160h
+#     renewBefore: 240h
+#     # Defaults to the ClusterIssuer above.
+#     issuerRef:
+#       name: letsencrypt-prod
+#       kind: ClusterIssuer
+certificates: []
+
+# ── Shared volumes ─────────────────────────────────────────────────────────
+# Statically provisioned PersistentVolumes, each with a PVC in the release
+# namespace bound to it, for storage several app releases mount at once
+# (via their extraVolumes). Keyed by name, e.g.
+#   backup:
+#     pvName: ""            # defaults to <key>
+#     claimName: ""         # defaults to <key>
+#     size: 50Gi
+#     accessModes: [ReadWriteOnce]
+#     storageClassName: manual
+#     reclaimPolicy: Retain
+#     mountOptions: []
+#     # exactly one of:
+#     hostPath:
+#       path: /srv/backups
+#       type: DirectoryOrCreate
+#     csi:
+#       driver: smb.csi.k8s.io
+#       volumeHandle: nas/share
+#       volumeAttributes:
+#         source: //nas.lan/share
+#       nodeStageSecretRef:
+#         name: smb-credentials   # namespace defaults to the release namespace
+sharedVolumes: {}
+
+# ── Anything else ──────────────────────────────────────────────────────────
+# Extra manifests, rendered with tpl (so they may use {{ .Release.Namespace }}).
+extraObjects: []

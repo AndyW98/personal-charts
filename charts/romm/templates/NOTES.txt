@@ -1,0 +1,18 @@
+RomM {{ include "romm.imageTag" . }} is deploying.
+
+{{- if .Values.ingress.enabled }}
+
+Open:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Open it with a port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "romm.fullname" . }} 8080:{{ .Values.service.port }}
+  then browse to http://127.0.0.1:8080
+{{- end }}
+
+On first start, RomM asks you to create the admin account.
+App secrets: Secret {{ include "romm.appSecretName" . }}.
+Database: {{ include "romm.db.host" . }}:{{ include "romm.db.port" . }}/{{ include "romm.db.name" . }}

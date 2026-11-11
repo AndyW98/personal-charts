@@ -1,0 +1,25 @@
+# Everything ephemeral (MariaDB data under a subPath of an emptyDir), with an
+# extra env var and an extra volume.
+persistence:
+  library:
+    enabled: false
+  resources:
+    enabled: false
+  assets:
+    enabled: false
+  config:
+    enabled: false
+  redis-data:
+    enabled: false
+mariadb:
+  persistence:
+    enabled: false
+    subPath: mariadb-data
+env:
+  ENABLE_SCHEDULED_RESCAN: "true"
+extraVolumes:
+  - name: scratch
+    emptyDir: {}
+extraVolumeMounts:
+  - name: scratch
+    mountPath: /scratch

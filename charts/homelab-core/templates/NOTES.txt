@@ -1,0 +1,12 @@
+homelab-core installed in namespace {{ .Release.Namespace }}.
+{{- if .Values.clusterIssuer.enabled }}
+  ClusterIssuer: {{ .Values.clusterIssuer.name }}
+{{- end }}
+{{- range .Values.certificates }}
+  Certificate: {{ .name }} -> Secret {{ .secretName | default .name }}
+{{- end }}
+{{- range $key, $v := .Values.sharedVolumes }}
+  Shared volume: PVC {{ $v.claimName | default $key }} (PV {{ $v.pvName | default $key }})
+{{- end }}
+
+Shared volumes and their PVCs are kept on `helm uninstall`; delete them by hand.

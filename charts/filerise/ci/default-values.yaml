@@ -1,0 +1,8 @@
+# Defaults with chart-managed PVCs that are removed on uninstall.
+persistence:
+  uploads:
+    retain: false
+  users:
+    retain: false
+  metadata:
+    retain: false

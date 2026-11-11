@@ -1,0 +1,20 @@
+apiVersion: v2
+name: docker-registry
+description: Docker / OCI image registry (CNCF Distribution)
+type: application
+version: 0.1.0
+appVersion: "3.1.2"
+home: https://distribution.github.io/distribution/
+sources:
+  - https://github.com/distribution/distribution
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - registry
+  - oci
+  - docker
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: Apache-2.0

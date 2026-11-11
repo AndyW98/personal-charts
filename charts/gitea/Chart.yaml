@@ -1,0 +1,19 @@
+apiVersion: v2
+name: gitea
+description: Gitea - lightweight self-hosted Git service (single pod, rootful image)
+type: application
+version: 0.1.0
+appVersion: "28.3.0"
+home: https://about.gitea.com
+sources:
+  - https://github.com/go-gitea/gitea
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - git
+  - scm
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: MIT

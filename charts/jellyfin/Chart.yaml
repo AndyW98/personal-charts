@@ -1,0 +1,21 @@
+apiVersion: v2
+name: jellyfin
+description: Jellyfin - free software media server (LinuxServer.io image)
+type: application
+version: 0.1.0
+appVersion: "12.4ubu2604-ls59"
+home: https://jellyfin.org
+sources:
+  - https://github.com/jellyfin/jellyfin
+  - https://github.com/linuxserver/docker-jellyfin
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - media
+  - streaming
+  - jellyfin
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: GPL-2.0-only

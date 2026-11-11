@@ -1,0 +1,14 @@
+apiVersion: v2
+name: homelab-core
+description: Cluster-level pieces shared by the homelab apps - cert-manager issuer and certificates, shared PersistentVolumes and arbitrary extra objects
+type: application
+version: 0.1.0
+sources:
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - homelab
+  - cert-manager
+  - storage
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98

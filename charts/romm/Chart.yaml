@@ -1,0 +1,20 @@
+apiVersion: v2
+name: romm
+description: RomM - ROM manager and web emulator, with an optional bundled MariaDB
+type: application
+version: 0.1.0
+appVersion: "5.4.1"
+home: https://romm.app
+sources:
+  - https://github.com/rommapp/romm
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - emulation
+  - roms
+  - games
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: AGPL-3.0-only

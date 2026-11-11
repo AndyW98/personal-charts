@@ -1,0 +1,16 @@
+Registry {{ include "docker-registry.imageTag" . }} is deploying.
+
+{{- if .Values.ingress.enabled }}
+
+Open:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+
+Open it with a port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "docker-registry.fullname" . }} 5000:{{ .Values.service.port }}
+  then browse to http://127.0.0.1:5000
+{{- end }}
+
+{{ if .Values.auth.htpasswdSecret }}Basic auth: htpasswd from Secret {{ .Values.auth.htpasswdSecret }}.{{ else }}No authentication is configured: anyone who can reach it can push and pull.{{ end }}

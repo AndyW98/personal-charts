@@ -1,0 +1,19 @@
+apiVersion: v2
+name: dokuwiki
+description: DokuWiki - simple, database-free wiki (LinuxServer.io image)
+type: application
+version: 0.1.0
+appVersion: "2026-07-14c-ls333"
+home: https://www.dokuwiki.org
+sources:
+  - https://github.com/linuxserver/docker-dokuwiki
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - wiki
+  - dokuwiki
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: GPL-2.0-only

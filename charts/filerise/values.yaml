@@ -1,0 +1,159 @@
+# Default values for filerise.
+# https://github.com/error311/FileRise
+
+image:
+  repository: docker.io/error311/filerise-docker
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# ── App configuration ──────────────────────────────────────────────────────
+# Plain (non-secret) environment variables, as NAME: value.
+env:
+  TIMEZONE: UTC
+  DATE_TIME_FORMAT: "m/d/y  h:iA"
+  TOTAL_UPLOAD_SIZE: 5G
+  # "true" when served over HTTPS (e.g. behind a TLS ingress).
+  SECURE: "false"
+  PUID: "1000"
+  PGID: "1000"
+  CHOWN_ON_START: "true"
+  SCAN_ON_START: "true"
+  SHARE_URL: ""
+# Put PERSISTENT_TOKENS_KEY (a long random string) in existingSecret; otherwise
+# FileRise falls back to its insecure built-in default.
+# Name of an existing Secret whose keys are all loaded as environment variables.
+existingSecret: ""
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# Each entry becomes a volume mounted at mountPath. Per entry:
+#   enabled        false -> emptyDir (data is lost when the pod goes away)
+#   existingClaim  mount a pre-created PVC instead of creating one
+#   hostPath       mount a directory on the node instead of a PVC (pin the pod
+#                  with nodeSelector); handy for reusing existing data in place
+#   hostPathType   hostPath type (default DirectoryOrCreate)
+#   subPath        mount only this subdirectory of the volume
+#   storageClass   "-" for no class; "" for the cluster default
+#   volumeName     bind the chart-created PVC to a specific pre-created PV
+#   retain         keep the chart-created PVC on `helm uninstall`
+persistence:
+  # Files managed by FileRise. Extra folders can be mounted below it via extraVolumeMounts.
+  uploads:
+    enabled: true
+    mountPath: /var/www/uploads
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 20Gi
+    retain: true
+  # User accounts.
+  users:
+    enabled: true
+    mountPath: /var/www/users
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 100Mi
+    retain: true
+  # File metadata, tags and shares.
+  metadata:
+    enabled: true
+    mountPath: /var/www/metadata
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    retain: true
+# Extra volumes / mounts, e.g. a shared backup or SMB PVC.
+extraVolumes: []
+extraVolumeMounts: []
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 80
+  # Only used when type is NodePort.
+  nodePort: ""
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: files.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: filerise-tls
+  #    hosts:
+  #      - files.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+# The image starts Apache as root and chowns the data volumes to PUID/PGID.
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext: {}
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 1Gi
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

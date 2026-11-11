@@ -1,0 +1,8 @@
+# Defaults with chart-managed PVCs that are removed on uninstall.
+# CI: placeholder image (FOUNDRY_STUB) built from images/foundryvtt and loaded into kind.
+image:
+  tag: ci
+  pullPolicy: Never
+persistence:
+  data:
+    retain: false
