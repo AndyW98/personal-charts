@@ -32,6 +32,32 @@ entries:
       artifacthub.io/license: AGPL-3.0-only
     apiVersion: v2
     appVersion: 2.5.2
+    created: "2026-11-11T00:40:46.56431143Z"
+    description: Marinara Engine - a self-hosted, AI-powered chat, roleplay and game
+      engine
+    digest: bbeb2f07e66a34079ba1290c5c4475a2cdb0796a9fd78fb6a122f46e7cc0279f
+    home: https://github.com/Pasta-Devs/Marinara-Engine
+    keywords:
+    - ai
+    - llm
+    - chat
+    - roleplay
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: marinara-engine
+    sources:
+    - https://github.com/Pasta-Devs/Marinara-Engine
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/marinara-engine-0.2.0/marinara-engine-0.2.0.tgz
+    version: 0.2.0
+  - annotations:
+      artifacthub.io/license: AGPL-3.0-only
+    apiVersion: v2
+    appVersion: 2.5.2
     created: "2026-11-08T16:26:53.974783589Z"
     description: Marinara Engine - a self-hosted, AI-powered chat, roleplay and game
       engine
@@ -78,4 +104,4 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/opencode-kali-0.1.0/opencode-kali-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-08T19:24:09.161527061Z"
+generated: "2026-11-11T00:40:46.564322415Z"
