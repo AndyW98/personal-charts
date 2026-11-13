@@ -1,0 +1,224 @@
+# Default values for olah (self-hosted Hugging Face mirror).
+# https://github.com/vtuber-plan/olah
+
+image:
+  repository: docker.io/xiahan2019/olah
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# ── App configuration ──────────────────────────────────────────────────────
+# Rendered into configs.toml ([basic] and [accessibility]). Clients send their
+# own Hugging Face token; Olah forwards it and stores none itself.
+config:
+  # Upstream to mirror. Point hfNetloc at another mirror (e.g. hf-mirror.com)
+  # to chain through it.
+  hfScheme: https
+  hfNetloc: huggingface.co
+  hfLfsNetloc: cdn-lfs.huggingface.co
+
+  # Cap on the cache in persistence.repos, e.g. "80GB" or "2TB" (units K, M, G,
+  # T, KB, MB, GB, TB; not Kubernetes "Gi"). Checked hourly and at startup,
+  # evicting whole cached files by cacheCleanStrategy. Empty: no limit, so the
+  # volume can fill up. Keep it below persistence.repos.size.
+  cacheSizeLimit: ""
+  # LRU, FIFO or LARGE_FIRST.
+  cacheCleanStrategy: LRU
+  # Compression for cached blocks: none, gzip or lzma.
+  cacheCompression: none
+  # Seconds repo/revision metadata is reused before asking Hugging Face again.
+  # 0 revalidates on every request, which can exhaust the Hub's rate limit.
+  metadataCacheTtl: 600
+
+  # Let clients' hf_xet fetch Xet files of at least xetPassthroughMinSize
+  # straight from xethub.hf.co instead of through the cache.
+  xetPassthrough: false
+  xetPassthroughMinSize: 50GB
+
+  # Serve only what is already cached; never contact the upstream.
+  offline: false
+
+  # Which repos may be proxied / cached. Empty lists allow everything. Rules
+  # are checked in order and the last match wins; once any rule is set, repos
+  # matching none are denied, so start a blocklist with the two allow-all rules.
+  # `repo` is a glob, or a regex with use_re: true.
+  #   - repo: "*"
+  #     allow: true
+  #   - repo: "*/*"
+  #     allow: true
+  #   - repo: "mistralai/Mistral.*"
+  #     allow: false
+  #     use_re: true
+  proxy: []
+  cache: []
+
+  # Any other [basic] key, as "key-name": value (string, integer or boolean),
+  # e.g. cache-redirect-model: true
+  extra: {}
+
+# Address clients reach the mirror at, shown on the landing page as
+# HF_ENDPOINT. Empty: the first ingress host when the ingress is enabled
+# (https when it has TLS), otherwise the in-cluster Service address.
+mirror:
+  scheme: ""
+  netloc: ""
+
+# Server processes. More than 1 helps with many concurrent downloads.
+workers: 1
+
+# Plain (non-secret) environment variables, as NAME: value, e.g. HTTPS_PROXY.
+env: {}
+# Additional env vars (full EnvVar objects, e.g. valueFrom.secretKeyRef).
+extraEnv: []
+# Additional envFrom sources.
+extraEnvFrom: []
+
+# ── Storage ────────────────────────────────────────────────────────────────
+# Each entry becomes a volume mounted at mountPath. Per entry:
+#   enabled        false -> emptyDir (data is lost when the pod goes away)
+#   existingClaim  mount a pre-created PVC instead of creating one
+#   hostPath       mount a directory on the node instead of a PVC (pin the pod
+#                  with nodeSelector); handy for reusing existing data in place
+#   hostPathType   hostPath type (default DirectoryOrCreate)
+#   subPath        mount only this subdirectory of the volume
+#   readOnly       mount read-only
+#   storageClass   "-" for no class; "" for the cluster default
+#   volumeName     bind the chart-created PVC to a specific pre-created PV
+#   retain         keep the chart-created PVC on `helm uninstall`
+persistence:
+  # The cache: every file block downloaded through the mirror. Caches are not
+  # compatible across Olah versions; empty this volume when upgrading.
+  repos:
+    enabled: true
+    mountPath: /data/repos
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 100Gi
+    retain: true
+  # Git clones served ahead of the upstream, laid out as
+  # models/<org>/<repo>, datasets/<org>/<repo>, spaces/<org>/<repo>.
+  mirrors:
+    enabled: false
+    mountPath: /data/mirrors
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    readOnly: false
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    retain: true
+  # Hourly-rotated log files, never pruned by Olah. The same lines go to the
+  # container log, so an emptyDir is normally enough.
+  logs:
+    enabled: false
+    mountPath: /data/logs
+    existingClaim: ""
+    hostPath: ""
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    retain: false
+# Extra volumes / mounts, e.g. a shared model store or SMB PVC.
+extraVolumes: []
+extraVolumeMounts: []
+
+# ── Networking ─────────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 8090
+  # Only used when type is NodePort.
+  nodePort: ""
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  # Model files are many GB: turn off proxy buffering and raise timeouts, e.g.
+  # for ingress-nginx:
+  #   nginx.ingress.kubernetes.io/proxy-buffering: "off"
+  #   nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+  annotations: {}
+  hosts:
+    - host: olah.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: olah-tls
+  #    hosts:
+  #      - olah.example.com
+
+# ── Pod ────────────────────────────────────────────────────────────────────
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 2Gi
+
+# Startup waits on a cache size scan when cacheSizeLimit is set, which can
+# take minutes on a large cache.
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 60
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 5
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

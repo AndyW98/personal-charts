@@ -1,0 +1,33 @@
+# Ephemeral cache with a size limit, access rules, extra config keys and
+# several workers.
+persistence:
+  repos:
+    enabled: false
+workers: 2
+config:
+  cacheSizeLimit: 5GB
+  cacheCleanStrategy: LARGE_FIRST
+  proxy:
+    - repo: "*"
+      allow: true
+    - repo: "*/*"
+      allow: true
+    - repo: "mistralai/Mistral.*"
+      allow: false
+      use_re: true
+  cache:
+    - repo: "*"
+      allow: true
+    - repo: "*/*"
+      allow: true
+    - repo: "adept/fuyu-8b"
+      allow: false
+  extra:
+    cache-redirect-model: false
+    cache-block-size: 67108864
+    cache-chunk-size: 1MB
+mirror:
+  scheme: https
+  netloc: hf.example.com
+env:
+  HF_HUB_DISABLE_TELEMETRY: "1"

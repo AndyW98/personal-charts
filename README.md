@@ -22,6 +22,7 @@ version is merged to `main`, it is published to:
 | [`homelab-core`](charts/homelab-core) | — | cert-manager ClusterIssuer/Certificates, shared PersistentVolumes, extra objects |
 | [`jellyfin`](charts/jellyfin) | [Jellyfin](https://jellyfin.org) | Media server (LinuxServer.io image) |
 | [`marinara-engine`](charts/marinara-engine) | [Marinara Engine](https://github.com/Pasta-Devs/Marinara-Engine) | Self-hosted AI chat, roleplay and game engine |
+| [`olah`](charts/olah) | [Olah](https://github.com/vtuber-plan/olah) | Hugging Face mirror that caches models and datasets as they are downloaded |
 | [`opencode-kali`](charts/opencode-kali) | [opencode](https://opencode.ai) | `opencode serve` in a Kali Linux container (custom image from `images/opencode-kali`) |
 | [`romm`](charts/romm) | [RomM](https://romm.app) | ROM manager and web emulator, with an optional bundled MariaDB |
 
