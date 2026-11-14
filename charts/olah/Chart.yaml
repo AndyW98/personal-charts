@@ -1,0 +1,21 @@
+apiVersion: v2
+name: olah
+description: Self-hosted Hugging Face mirror that caches models, datasets and spaces as they are downloaded
+type: application
+version: 0.1.0
+appVersion: "0.5.4"
+home: https://github.com/vtuber-plan/olah
+sources:
+  - https://github.com/vtuber-plan/olah
+  - https://github.com/AndyW98/personal-charts
+keywords:
+  - huggingface
+  - mirror
+  - cache
+  - proxy
+  - self-hosted
+maintainers:
+  - name: AndyW98
+    url: https://github.com/AndyW98
+annotations:
+  artifacthub.io/license: MIT

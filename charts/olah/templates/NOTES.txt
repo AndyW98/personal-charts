@@ -1,0 +1,16 @@
+Olah {{ include "olah.imageTag" . }} is deploying.
+
+Point Hugging Face clients at the mirror:
+  export HF_ENDPOINT={{ include "olah.mirrorScheme" . }}://{{ include "olah.mirrorNetloc" . }}
+  hf download openai-community/gpt2
+{{- if not .Values.ingress.enabled }}
+
+From outside the cluster, port-forward first:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "olah.fullname" . }} 8090:{{ .Values.service.port }}
+  export HF_ENDPOINT=http://127.0.0.1:8090
+{{- end }}
+
+{{- if not .Values.config.cacheSizeLimit }}
+
+config.cacheSizeLimit is empty: the cache grows until its volume is full.
+{{- end }}

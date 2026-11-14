@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "olah.fullname" . }}
+  labels:
+    {{- include "olah.labels" . | nindent 4 }}
+data:
+  configs.toml: |
+    {{- include "olah.config" . | nindent 4 | replace "\n    \n" "\n\n" }}

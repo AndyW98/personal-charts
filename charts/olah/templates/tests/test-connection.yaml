@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "olah.fullname" . }}-test-connection"
+  labels:
+    {{- include "olah.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: wget
+      image: busybox:1.37
+      command:
+        - wget
+        - -q
+        - -O-
+        # Olah has no health endpoint, and the landing page returns 500 in
+        # the 0.5.4 image. /docs is served by the app without the upstream.
+        - "http://{{ include "olah.fullname" . }}:{{ .Values.service.port }}/docs"
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
