@@ -271,6 +271,33 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/marinara-engine-0.1.0/marinara-engine-0.1.0.tgz
     version: 0.1.0
+  olah:
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 0.5.4
+    created: "2026-11-14T01:33:37.049616321Z"
+    description: Self-hosted Hugging Face mirror that caches models, datasets and
+      spaces as they are downloaded
+    digest: 1699b1f589b03d3c6ca7333a892e0ca7925bb40bb28345cabf1f3017779b7187
+    home: https://github.com/vtuber-plan/olah
+    keywords:
+    - huggingface
+    - mirror
+    - cache
+    - proxy
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: olah
+    sources:
+    - https://github.com/vtuber-plan/olah
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/olah-0.1.0/olah-0.1.0.tgz
+    version: 0.1.0
   opencode-kali:
   - apiVersion: v2
     appVersion: 1.19.5
@@ -320,4 +347,4 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/romm-0.1.0/romm-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-11T00:43:57.474404972Z"
+generated: "2026-11-14T01:33:37.04962915Z"
