@@ -21,7 +21,9 @@ spec:
         - wget
         - -q
         - -O-
-        - "http://{{ include "olah.fullname" . }}:{{ .Values.service.port }}/"
+        # Olah has no health endpoint, and the landing page returns 500 in
+        # the 0.5.4 image. /docs is served by the app without the upstream.
+        - "http://{{ include "olah.fullname" . }}:{{ .Values.service.port }}/docs"
       securityContext:
         allowPrivilegeEscalation: false
         readOnlyRootFilesystem: true

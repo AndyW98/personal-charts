@@ -61,13 +61,49 @@ PVC name for a persistence entry. Call with (dict "root" $ "name" <key> "p" <ent
 {{- end }}
 
 {{/*
+CIFS mount options for an SMB-backed persistence entry, comma separated. Call
+with (dict "root" $ "p" <entry>). smb.mountOptions when set; otherwise files are
+owned by the pod's runAsUser / runAsGroup, since fsGroup is not applied to CIFS.
+*/}}
+{{- define "olah.smbMountOptions" -}}
+{{- $smb := .p.smb | default dict -}}
+{{- if $smb.mountOptions -}}
+{{- join "," $smb.mountOptions -}}
+{{- else -}}
+{{- $sc := .root.Values.podSecurityContext | default dict -}}
+{{- $opts := list -}}
+{{- if hasKey $sc "runAsUser" -}}
+{{- $opts = append $opts (printf "uid=%d" (int64 $sc.runAsUser)) -}}
+{{- end -}}
+{{- if hasKey $sc "runAsGroup" -}}
+{{- $opts = append $opts (printf "gid=%d" (int64 $sc.runAsGroup)) -}}
+{{- end -}}
+{{- join "," (concat $opts (list "dir_mode=0770" "file_mode=0660")) -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 One pod volume for a persistence entry. Call with (dict "root" $ "name" <key> "p" <entry>).
-Disabled -> emptyDir; hostPath set -> hostPath; otherwise the existing or chart-managed PVC.
+Disabled -> emptyDir; smb.source set -> SMB share through the SMB CSI driver;
+hostPath set -> hostPath; otherwise the existing or chart-managed PVC.
 */}}
 {{- define "olah.volume" -}}
+{{- $smb := .p.smb | default dict -}}
+{{- if and .p.enabled $smb.source (or .p.hostPath .p.existingClaim) -}}
+{{- fail (printf "persistence.%s: set only one of smb.source, hostPath and existingClaim" .name) -}}
+{{- end -}}
 - name: {{ .name }}
   {{- if not .p.enabled }}
   emptyDir: {}
+  {{- else if $smb.source }}
+  csi:
+    driver: smb.csi.k8s.io
+    volumeAttributes:
+      source: {{ $smb.source | quote }}
+      {{- with $smb.existingSecret }}
+      secretName: {{ . | quote }}
+      {{- end }}
+      mountOptions: {{ include "olah.smbMountOptions" . | quote }}
   {{- else if .p.hostPath }}
   hostPath:
     path: {{ .p.hostPath | quote }}

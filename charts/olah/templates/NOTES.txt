@@ -10,7 +10,7 @@ From outside the cluster, port-forward first:
   export HF_ENDPOINT=http://127.0.0.1:8090
 {{- end }}
 
-Cached repositories are listed at /repos.
 {{- if not .Values.config.cacheSizeLimit }}
+
 config.cacheSizeLimit is empty: the cache grows until its volume is full.
 {{- end }}

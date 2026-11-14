@@ -66,9 +66,10 @@ config:
   # e.g. cache-redirect-model: true
   extra: {}
 
-# Address clients reach the mirror at, shown on the landing page as
-# HF_ENDPOINT. Empty: the first ingress host when the ingress is enabled
-# (https when it has TLS), otherwise the in-cluster Service address.
+# Address clients reach the mirror at: printed in the install notes and
+# written to configs.toml as mirror-scheme / mirror-netloc. Empty: the first
+# ingress host when the ingress is enabled (https when it has TLS), otherwise
+# the in-cluster Service address.
 mirror:
   scheme: ""
   netloc: ""
@@ -90,6 +91,15 @@ extraEnvFrom: []
 #   hostPath       mount a directory on the node instead of a PVC (pin the pod
 #                  with nodeSelector); handy for reusing existing data in place
 #   hostPathType   hostPath type (default DirectoryOrCreate)
+#   smb            mount an SMB / CIFS share instead of a PVC, through the SMB
+#                  CSI driver (smb.csi.k8s.io), which must be installed in the
+#                  cluster. Opt in by setting smb.source:
+#     source          //server/share
+#     existingSecret  Secret in the release namespace with `username` and
+#                     `password` keys (optional `domain`). Leave empty only
+#                     for a guest share, with `guest` in mountOptions.
+#     mountOptions    CIFS mount options. Empty: uid / gid from
+#                     podSecurityContext, dir_mode=0770, file_mode=0660.
 #   subPath        mount only this subdirectory of the volume
 #   readOnly       mount read-only
 #   storageClass   "-" for no class; "" for the cluster default
@@ -103,6 +113,10 @@ persistence:
     mountPath: /data/repos
     existingClaim: ""
     hostPath: ""
+    smb:
+      source: ""
+      existingSecret: ""
+      mountOptions: []
     subPath: ""
     storageClass: ""
     accessModes:
@@ -116,6 +130,10 @@ persistence:
     mountPath: /data/mirrors
     existingClaim: ""
     hostPath: ""
+    smb:
+      source: ""
+      existingSecret: ""
+      mountOptions: []
     subPath: ""
     readOnly: false
     storageClass: ""
@@ -193,25 +211,26 @@ resources:
   limits:
     memory: 2Gi
 
-# Startup waits on a cache size scan when cacheSizeLimit is set, which can
-# take minutes on a large cache.
+# Olah has no health endpoint; /docs is answered by the app itself without
+# contacting the upstream. Startup waits on a cache size scan when
+# cacheSizeLimit is set, which can take minutes on a large cache.
 startupProbe:
   httpGet:
-    path: /
+    path: /docs
     port: http
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 60
 livenessProbe:
   httpGet:
-    path: /
+    path: /docs
     port: http
   periodSeconds: 30
   timeoutSeconds: 10
   failureThreshold: 5
 readinessProbe:
   httpGet:
-    path: /
+    path: /docs
     port: http
   periodSeconds: 10
   timeoutSeconds: 5

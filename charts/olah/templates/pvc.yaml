@@ -1,5 +1,5 @@
 {{- range $name, $p := .Values.persistence }}
-{{- if and $p.enabled (not $p.existingClaim) (not $p.hostPath) }}
+{{- if and $p.enabled (not $p.existingClaim) (not $p.hostPath) (not ($p.smb | default dict).source) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

@@ -18,9 +18,12 @@ export HF_ENDPOINT=http://olah.<ns>.svc:8090   # or the ingress URL
 hf download openai-community/gpt2
 ```
 
-Clients keep using their own `HF_TOKEN` for gated and private repos; Olah forwards it and stores no token. The
-landing page at `/` shows the endpoint to use and `/repos` lists what is cached. Nothing authenticates clients, so
-anyone who can reach the Service or ingress can download through it.
+Clients keep using their own `HF_TOKEN` for gated and private repos; Olah forwards it and stores no token. Nothing
+authenticates clients, so anyone who can reach the Service or ingress can download through it.
+
+Olah's two HTML pages (the landing page at `/` and the cache listing at `/repos`) return 500 in the `0.5.4` image:
+it ships a Starlette release that dropped the template call Olah uses. The API and download routes don't use
+templates. Olah has no health endpoint, so the probes and `helm test` request `/docs` instead.
 
 ## Configuration
 
@@ -34,9 +37,9 @@ anyone who can reach the Service or ingress can download through it.
 - `hfNetloc` chains through another mirror instead of `huggingface.co`.
 - `extra` passes any other `[basic]` key through.
 
-`mirror.scheme` / `mirror.netloc` set the address shown on the landing page. Left empty they follow the first ingress
-host, or the in-cluster Service when the ingress is off. `workers` starts more server processes for many concurrent
-downloads.
+`mirror.scheme` / `mirror.netloc` set the address clients use, as printed in the install notes and written to
+`configs.toml`. Left empty they follow the first ingress host, or the in-cluster Service when the ingress is off.
+`workers` starts more server processes for many concurrent downloads.
 
 Behind an ingress, turn off response buffering and raise the read timeout; model files are many GB (see the comment
 on `ingress.annotations`).
@@ -44,8 +47,8 @@ on `ingress.annotations`).
 ## Storage
 
 Every entry under `persistence` is mounted at its `mountPath` and can be backed by
-a chart-created PVC, an `existingClaim` (optionally with `subPath`), or a
-node `hostPath`. `enabled: false` swaps in an `emptyDir`. Chart-created PVCs carry
+a chart-created PVC, an `existingClaim` (optionally with `subPath`), a
+node `hostPath`, or an SMB share (below). `enabled: false` swaps in an `emptyDir`. Chart-created PVCs carry
 `helm.sh/resource-policy: keep` unless `retain: false`.
 
 | Entry | Path | Default | Holds |
@@ -58,6 +61,33 @@ Olah's cache format is not stable across versions: upstream says to delete the c
 `repos` volume when `appVersion` changes.
 
 The pod runs as UID/GID 1000 with a read-only root filesystem. Volumes that don't honour `fsGroup` (hostPath, some
-NFS/SMB exports) must already be writable by that user.
+NFS exports) must already be writable by that user.
+
+### SMB share
+
+Any entry can mount an SMB / CIFS share directly, e.g. to keep the cache on a NAS. It is off until `smb.source` is
+set, and needs the [SMB CSI driver](https://github.com/kubernetes-csi/csi-driver-smb) (`smb.csi.k8s.io`) installed in
+the cluster:
+
+```sh
+kubectl -n <ns> create secret generic smb-credentials \
+  --from-literal username=<user> --from-literal password=<password>
+```
+
+```yaml
+persistence:
+  repos:
+    smb:
+      source: //nas.lan/models
+      existingSecret: smb-credentials
+```
+
+The share is mounted as an inline CSI volume in the pod, so the chart creates no PV or PVC for that entry and `size`,
+`storageClass` and `retain` don't apply; `subPath` still does. `fsGroup` has no effect on CIFS, so the default mount
+options make the pod's user own the files (`uid=1000,gid=1000,dir_mode=0770,file_mode=0660`, following
+`podSecurityContext`). `smb.mountOptions` replaces that list; for a guest share leave `existingSecret` empty and
+include `guest`.
+
+CI can't cover this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
 
 See [`values.yaml`](values.yaml) for all options.
