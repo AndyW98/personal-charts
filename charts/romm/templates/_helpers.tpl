@@ -62,13 +62,42 @@ PVC name for a persistence entry. Call with (dict "root" $ "name" <key> "p" <ent
 {{- end }}
 
 {{/*
+CIFS mount options for an SMB-backed persistence entry, comma separated. Call
+with (dict "root" $ "p" <entry>). smb.mountOptions when set; otherwise files are
+owned by the image's romm user (1000), since fsGroup is not applied to CIFS.
+*/}}
+{{- define "romm.smbMountOptions" -}}
+{{- $smb := .p.smb | default dict -}}
+{{- if $smb.mountOptions -}}
+{{- join "," $smb.mountOptions -}}
+{{- else -}}
+{{- $opts := list "uid=1000" "gid=1000" -}}
+{{- join "," (concat $opts (list "dir_mode=0770" "file_mode=0660")) -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 One pod volume for a persistence entry. Call with (dict "root" $ "name" <key> "p" <entry>).
-Disabled -> emptyDir; hostPath set -> hostPath; otherwise the existing or chart-managed PVC.
+Disabled -> emptyDir; smb.source set -> SMB share through the SMB CSI driver;
+hostPath set -> hostPath; otherwise the existing or chart-managed PVC.
 */}}
 {{- define "romm.volume" -}}
+{{- $smb := .p.smb | default dict -}}
+{{- if and .p.enabled $smb.source (or .p.hostPath .p.existingClaim) -}}
+{{- fail (printf "persistence.%s: set only one of smb.source, hostPath and existingClaim" .name) -}}
+{{- end -}}
 - name: {{ .name }}
   {{- if not .p.enabled }}
   emptyDir: {}
+  {{- else if $smb.source }}
+  csi:
+    driver: smb.csi.k8s.io
+    volumeAttributes:
+      source: {{ $smb.source | quote }}
+      {{- with $smb.existingSecret }}
+      secretName: {{ . | quote }}
+      {{- end }}
+      mountOptions: {{ include "romm.smbMountOptions" . | quote }}
   {{- else if .p.hostPath }}
   hostPath:
     path: {{ .p.hostPath | quote }}

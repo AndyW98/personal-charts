@@ -89,5 +89,6 @@ options make the pod's user own the files (`uid=1000,gid=1000,dir_mode=0770,file
 include `guest`.
 
 CI can't cover this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
+Setup, mount options and troubleshooting are in the [SMB guide](../../docs/smb.md).
 
 See [`values.yaml`](values.yaml) for all options.

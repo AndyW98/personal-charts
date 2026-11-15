@@ -2,7 +2,7 @@ apiVersion: v2
 name: gitea
 description: Gitea - lightweight self-hosted Git service (single pod, rootful image)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "28.3.0"
 home: https://about.gitea.com
 sources:

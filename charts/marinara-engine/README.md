@@ -23,6 +23,15 @@ helm upgrade --install marinara personal-charts/marinara-engine \
 - **Persistence** is a chart-managed `ReadWriteOnce` PVC (10Gi), or set
   `persistence.existingClaim`. The PVC is kept on `helm uninstall` unless
   `persistence.retain=false`. Local models and embeddings need more space.
+- **SMB share (opt-in).** Set `persistence.smb.source` (`//server/share`) and
+  `persistence.smb.existingSecret` (a Secret with `username` / `password`
+  keys) to keep `/app/data` on an SMB / CIFS share instead of a PVC. It needs
+  the [SMB CSI driver](https://github.com/kubernetes-csi/csi-driver-smb)
+  (`smb.csi.k8s.io`) in the cluster and is mounted as an inline volume, so no
+  PVC is created. The default mount options make uid/gid 1000 own the files;
+  `persistence.smb.mountOptions` replaces them. CI can't install this (kind
+  has no SMB CSI driver), so it is checked only by rendering the manifests.
+  See the [SMB guide](../../docs/smb.md).
 - **Non-root.** The pod runs as uid/gid 1000 (`node`) with `fsGroup: 1000`.
   The upstream entrypoint chowns `/app/data` only when started as root; here
   `fsGroup` handles volume ownership instead.
@@ -213,6 +222,7 @@ tls:
 | `extraEnv` / `extraEnvFrom` | `[]` | Raw extra env / envFrom entries |
 | `persistence.enabled` | `true` | Persist `/app/data` (an `emptyDir` is used when disabled) |
 | `persistence.existingClaim` | `""` | Use an existing PVC |
+| `persistence.smb.source` / `.existingSecret` / `.mountOptions` | `""` / `""` / `[]` | Mount an SMB share instead of a PVC |
 | `persistence.storageClass` | `""` | StorageClass (`-` for `""`) |
 | `persistence.size` | `10Gi` | PVC size |
 | `persistence.retain` | `true` | Keep the PVC on uninstall |

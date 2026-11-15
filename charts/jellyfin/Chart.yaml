@@ -2,7 +2,7 @@ apiVersion: v2
 name: jellyfin
 description: Jellyfin - free software media server (LinuxServer.io image)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "12.4ubu2604-ls59"
 home: https://jellyfin.org
 sources:

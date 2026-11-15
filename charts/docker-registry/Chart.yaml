@@ -2,7 +2,7 @@ apiVersion: v2
 name: docker-registry
 description: Docker / OCI image registry (CNCF Distribution)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "3.1.2"
 home: https://distribution.github.io/distribution/
 sources:

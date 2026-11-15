@@ -2,7 +2,7 @@ apiVersion: v2
 name: olah
 description: Self-hosted Hugging Face mirror that caches models, datasets and spaces as they are downloaded
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: "0.5.4"
 home: https://github.com/vtuber-plan/olah
 sources:

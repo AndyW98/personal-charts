@@ -2,7 +2,7 @@ apiVersion: v2
 name: dokuwiki
 description: DokuWiki - simple, database-free wiki (LinuxServer.io image)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "2026-07-14c-ls333"
 home: https://www.dokuwiki.org
 sources:

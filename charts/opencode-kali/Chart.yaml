@@ -2,7 +2,7 @@ apiVersion: v2
 name: opencode-kali
 description: opencode headless server (`opencode serve`) in a Kali Linux container
 type: application
-version: 0.1.0
+version: 0.2.0
 # opencode version baked into the image (images/opencode-kali).
 appVersion: "1.19.5"
 home: https://opencode.ai
