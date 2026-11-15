@@ -32,6 +32,30 @@ entries:
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
     appVersion: 3.1.2
+    created: "2026-11-15T16:43:51.188947955Z"
+    description: Docker / OCI image registry (CNCF Distribution)
+    digest: 724792f3efc36a49f7e8c4036eb550b474b7b666951a330e3d892b498020c9ed
+    home: https://distribution.github.io/distribution/
+    keywords:
+    - registry
+    - oci
+    - docker
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: docker-registry
+    sources:
+    - https://github.com/distribution/distribution
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/docker-registry-0.2.0/docker-registry-0.2.0.tgz
+    version: 0.2.0
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: 3.1.2
     created: "2026-11-11T00:43:56.221516984Z"
     description: Docker / OCI image registry (CNCF Distribution)
     digest: 7373396c80548cd69ebc49ab3105f626528116b979be5f34905a0c7161ef7d04
@@ -53,6 +77,29 @@ entries:
     - https://github.com/AndyW98/personal-charts/releases/download/docker-registry-0.1.0/docker-registry-0.1.0.tgz
     version: 0.1.0
   dokuwiki:
+  - annotations:
+      artifacthub.io/license: GPL-2.0-only
+    apiVersion: v2
+    appVersion: 2026-07-14c-ls333
+    created: "2026-11-15T16:43:51.344685935Z"
+    description: DokuWiki - simple, database-free wiki (LinuxServer.io image)
+    digest: 4cdbeb94bb33ecd21504ee7bd9f50a4116fd97b0f92014d6898d92e0dbcb8cd5
+    home: https://www.dokuwiki.org
+    keywords:
+    - wiki
+    - dokuwiki
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: dokuwiki
+    sources:
+    - https://github.com/linuxserver/docker-dokuwiki
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/dokuwiki-0.2.0/dokuwiki-0.2.0.tgz
+    version: 0.2.0
   - annotations:
       artifacthub.io/license: GPL-2.0-only
     apiVersion: v2
@@ -81,6 +128,29 @@ entries:
       artifacthub.io/license: MIT
     apiVersion: v2
     appVersion: v3.42.0
+    created: "2026-11-15T16:43:51.521795816Z"
+    description: FileRise - self-hosted web file manager
+    digest: 9c5a65bb1228afb358ff4d01feabe56489e3b71128c1c2ca1ea5cce58112f2fe
+    home: https://github.com/error311/FileRise
+    keywords:
+    - files
+    - file-manager
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: filerise
+    sources:
+    - https://github.com/error311/FileRise
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/filerise-0.2.0/filerise-0.2.0.tgz
+    version: 0.2.0
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: v3.42.0
     created: "2026-11-11T00:43:56.52746307Z"
     description: FileRise - self-hosted web file manager
     digest: 53a5bb3359a66236c5b8b360de942a17fbae5c248d0dfe74a544ebd3078b1a96
@@ -101,6 +171,27 @@ entries:
     - https://github.com/AndyW98/personal-charts/releases/download/filerise-0.1.0/filerise-0.1.0.tgz
     version: 0.1.0
   foundryvtt:
+  - apiVersion: v2
+    appVersion: "14.359"
+    created: "2026-11-15T16:43:51.681434239Z"
+    description: Foundry Virtual Tabletop, from an image built in this repo
+    digest: 43e535db7caa7a2ca7d865ccbe28651c24ea99bb1d072c44c31592b01f67709a
+    home: https://foundryvtt.com
+    keywords:
+    - vtt
+    - tabletop
+    - games
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: foundryvtt
+    sources:
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/foundryvtt-0.2.0/foundryvtt-0.2.0.tgz
+    version: 0.2.0
   - apiVersion: v2
     appVersion: "14.359"
     created: "2026-11-11T00:43:56.688429031Z"
@@ -127,6 +218,30 @@ entries:
       artifacthub.io/license: MIT
     apiVersion: v2
     appVersion: 28.3.0
+    created: "2026-11-15T16:43:51.849001759Z"
+    description: Gitea - lightweight self-hosted Git service (single pod, rootful
+      image)
+    digest: f092546c0aa5476fc60a644b4d5128910164be63387d8a1f1c3c7bc42f6fdd61
+    home: https://about.gitea.com
+    keywords:
+    - git
+    - scm
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: gitea
+    sources:
+    - https://github.com/go-gitea/gitea
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/gitea-0.2.0/gitea-0.2.0.tgz
+    version: 0.2.0
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 28.3.0
     created: "2026-11-11T00:43:56.848159868Z"
     description: Gitea - lightweight self-hosted Git service (single pod, rootful
       image)
@@ -148,6 +263,30 @@ entries:
     - https://github.com/AndyW98/personal-charts/releases/download/gitea-0.1.0/gitea-0.1.0.tgz
     version: 0.1.0
   heimdall:
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: v2.8.4-ls372
+    created: "2026-11-15T16:43:52.006188931Z"
+    description: Heimdall - application dashboard (LinuxServer.io image)
+    digest: 7adceab805a2a2ad1df6c809fca534d255563e809132e8883fd5257b128c68ce
+    home: https://heimdall.site
+    keywords:
+    - dashboard
+    - homepage
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: heimdall
+    sources:
+    - https://github.com/linuxserver/Heimdall
+    - https://github.com/linuxserver/docker-heimdall
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/heimdall-0.2.0/heimdall-0.2.0.tgz
+    version: 0.2.0
   - annotations:
       artifacthub.io/license: MIT
     apiVersion: v2
@@ -197,6 +336,31 @@ entries:
       artifacthub.io/license: GPL-2.0-only
     apiVersion: v2
     appVersion: 12.4ubu2604-ls59
+    created: "2026-11-15T16:43:52.157393139Z"
+    description: Jellyfin - free software media server (LinuxServer.io image)
+    digest: 5df4dec85ba7a0895950c7cecb1af5cc2e3851b083daa9324bda2aa64fdaa00a
+    home: https://jellyfin.org
+    keywords:
+    - media
+    - streaming
+    - jellyfin
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: jellyfin
+    sources:
+    - https://github.com/jellyfin/jellyfin
+    - https://github.com/linuxserver/docker-jellyfin
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/jellyfin-0.2.0/jellyfin-0.2.0.tgz
+    version: 0.2.0
+  - annotations:
+      artifacthub.io/license: GPL-2.0-only
+    apiVersion: v2
+    appVersion: 12.4ubu2604-ls59
     created: "2026-11-11T00:43:57.331926415Z"
     description: Jellyfin - free software media server (LinuxServer.io image)
     digest: 2bcdd5e44320ec513eb1bcb0aa62c5ed2035d6b91ec235a7c67904f1a2e82b9f
@@ -219,6 +383,32 @@ entries:
     - https://github.com/AndyW98/personal-charts/releases/download/jellyfin-0.1.0/jellyfin-0.1.0.tgz
     version: 0.1.0
   marinara-engine:
+  - annotations:
+      artifacthub.io/license: AGPL-3.0-only
+    apiVersion: v2
+    appVersion: 2.5.2
+    created: "2026-11-15T16:43:52.336338741Z"
+    description: Marinara Engine - a self-hosted, AI-powered chat, roleplay and game
+      engine
+    digest: 889f7dd96f1e235f31af6164a05f8af482d517e88230f67151b42e018580e852
+    home: https://github.com/Pasta-Devs/Marinara-Engine
+    keywords:
+    - ai
+    - llm
+    - chat
+    - roleplay
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: marinara-engine
+    sources:
+    - https://github.com/Pasta-Devs/Marinara-Engine
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/marinara-engine-0.3.0/marinara-engine-0.3.0.tgz
+    version: 0.3.0
   - annotations:
       artifacthub.io/license: AGPL-3.0-only
     apiVersion: v2
@@ -276,6 +466,32 @@ entries:
       artifacthub.io/license: MIT
     apiVersion: v2
     appVersion: 0.5.4
+    created: "2026-11-15T16:43:52.496193093Z"
+    description: Self-hosted Hugging Face mirror that caches models, datasets and
+      spaces as they are downloaded
+    digest: 1b779e2968d8ec564bf983905b85373ff36f68b8f9fdf82290484ccc9373c1b3
+    home: https://github.com/vtuber-plan/olah
+    keywords:
+    - huggingface
+    - mirror
+    - cache
+    - proxy
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: olah
+    sources:
+    - https://github.com/vtuber-plan/olah
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/olah-0.1.1/olah-0.1.1.tgz
+    version: 0.1.1
+  - annotations:
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 0.5.4
     created: "2026-11-14T01:33:37.049616321Z"
     description: Self-hosted Hugging Face mirror that caches models, datasets and
       spaces as they are downloaded
@@ -299,6 +515,29 @@ entries:
     - https://github.com/AndyW98/personal-charts/releases/download/olah-0.1.0/olah-0.1.0.tgz
     version: 0.1.0
   opencode-kali:
+  - apiVersion: v2
+    appVersion: 1.19.5
+    created: "2026-11-15T16:43:52.646565981Z"
+    description: opencode headless server (`opencode serve`) in a Kali Linux container
+    digest: 3fe2ebd66f67fe9227583aabf185b190d021d24ca07a412bb3d621e5efffa785
+    home: https://opencode.ai
+    keywords:
+    - opencode
+    - ai
+    - coding-agent
+    - kali
+    - security
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: opencode-kali
+    sources:
+    - https://github.com/anomalyco/opencode
+    - https://github.com/AndyW98/personal-charts/tree/main/images/opencode-kali
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/opencode-kali-0.2.0/opencode-kali-0.2.0.tgz
+    version: 0.2.0
   - apiVersion: v2
     appVersion: 1.19.5
     created: "2026-11-08T17:54:37.543620446Z"
@@ -327,6 +566,30 @@ entries:
       artifacthub.io/license: AGPL-3.0-only
     apiVersion: v2
     appVersion: 5.4.1
+    created: "2026-11-15T16:43:52.801958477Z"
+    description: RomM - ROM manager and web emulator, with an optional bundled MariaDB
+    digest: da7dbf62b2a6d88603456d98e3f21ad09333c72e2eaac1a3a58280c7fbaaba4d
+    home: https://romm.app
+    keywords:
+    - emulation
+    - roms
+    - games
+    - self-hosted
+    maintainers:
+    - name: AndyW98
+      url: https://github.com/AndyW98
+    name: romm
+    sources:
+    - https://github.com/rommapp/romm
+    - https://github.com/AndyW98/personal-charts
+    type: application
+    urls:
+    - https://github.com/AndyW98/personal-charts/releases/download/romm-0.2.0/romm-0.2.0.tgz
+    version: 0.2.0
+  - annotations:
+      artifacthub.io/license: AGPL-3.0-only
+    apiVersion: v2
+    appVersion: 5.4.1
     created: "2026-11-11T00:43:57.474392859Z"
     description: RomM - ROM manager and web emulator, with an optional bundled MariaDB
     digest: 4c8235380f7f6ffbb786c969a2077ca90dcc4a36fbeefb35949a115381385830
@@ -347,4 +610,4 @@ entries:
     urls:
     - https://github.com/AndyW98/personal-charts/releases/download/romm-0.1.0/romm-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-14T01:33:37.04962915Z"
+generated: "2026-11-15T16:43:52.80200796Z"
