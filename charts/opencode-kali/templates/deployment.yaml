@@ -130,11 +130,24 @@ spec:
             {{- end }}
       volumes:
         - name: data
-          {{- if .Values.persistence.enabled }}
+          {{- $smb := .Values.persistence.smb | default dict }}
+          {{- if and $smb.source .Values.persistence.existingClaim }}
+          {{- fail "persistence: set only one of smb.source and existingClaim" }}
+          {{- end }}
+          {{- if not .Values.persistence.enabled }}
+          emptyDir: {}
+          {{- else if $smb.source }}
+          csi:
+            driver: smb.csi.k8s.io
+            volumeAttributes:
+              source: {{ $smb.source | quote }}
+              {{- with $smb.existingSecret }}
+              secretName: {{ . | quote }}
+              {{- end }}
+              mountOptions: {{ include "opencode-kali.smbMountOptions" . | quote }}
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ include "opencode-kali.claimName" . }}
-          {{- else }}
-          emptyDir: {}
           {{- end }}
         - name: tmp
           emptyDir: {}

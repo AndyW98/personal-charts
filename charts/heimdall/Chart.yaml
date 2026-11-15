@@ -2,7 +2,7 @@ apiVersion: v2
 name: heimdall
 description: Heimdall - application dashboard (LinuxServer.io image)
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "v2.8.4-ls372"
 home: https://heimdall.site
 sources:

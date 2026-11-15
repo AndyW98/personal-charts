@@ -54,6 +54,16 @@ By default it includes Kali's `kali-linux-headless` tool set.
   - `/home/kali` holds opencode's config, provider logins
     (`~/.local/share/opencode`), sessions and caches.
   - `/workspace` is the server's working directory. Clone projects here.
+- **SMB share (opt-in):** set `persistence.smb.source` (`//server/share`) and
+  `persistence.smb.existingSecret` (a Secret with `username` / `password`
+  keys) to use an SMB / CIFS share instead of the PVC. It needs the
+  [SMB CSI driver](https://github.com/kubernetes-csi/csi-driver-smb)
+  (`smb.csi.k8s.io`) in the cluster and is mounted as an inline volume, so no
+  PVC is created. The default mount options (`uid=1000,gid=1000,dir_mode=0770,file_mode=0660`)
+  give files no execute bit, and CIFS has no symlinks by default; for a home
+  directory and workspace set `persistence.smb.mountOptions` with
+  `file_mode=0770` and `mfsymlinks` as well. CI can't install this (kind has
+  no SMB CSI driver), so it is checked only by rendering the manifests.
 - **Config:** `config` is rendered to `opencode.json` and passed with
   `OPENCODE_CONFIG`. The config files in the persisted home directory and in
   each project are still read too.
@@ -101,6 +111,7 @@ strong and the Service off the public internet.
 | `config` | `{}` | `opencode.json` contents |
 | `env` / `extraEnv` / `extraEnvFrom` | | Extra environment |
 | `persistence.*` | enabled, 20Gi, retained | Home + workspace volume |
+| `persistence.smb.*` | off | Mount an SMB share instead of the PVC |
 | `service.*`, `ingress.*` | ClusterIP 4096, ingress off | Networking |
 | `podSecurityContext` / `securityContext` | non-root 1000, drop ALL | See above |
 | `resources` | 250m / 512Mi request, 4Gi limit | Container resources |

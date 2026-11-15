@@ -37,6 +37,15 @@ extraEnvFrom: []
 #   hostPath       mount a directory on the node instead of a PVC (pin the pod
 #                  with nodeSelector); handy for reusing existing data in place
 #   hostPathType   hostPath type (default DirectoryOrCreate)
+#   smb            mount an SMB / CIFS share instead of a PVC, through the SMB
+#                  CSI driver (smb.csi.k8s.io), which must be installed in the
+#                  cluster. Opt in by setting smb.source:
+#     source          //server/share
+#     existingSecret  Secret in the release namespace with `username` and
+#                     `password` keys (optional `domain`). Leave empty only
+#                     for a guest share, with `guest` in mountOptions.
+#     mountOptions    CIFS mount options. Empty: uid / gid from
+#                     env.PUID / env.PGID, dir_mode=0770, file_mode=0660.
 #   subPath        mount only this subdirectory of the volume
 #   storageClass   "-" for no class; "" for the cluster default
 #   volumeName     bind the chart-created PVC to a specific pre-created PV
@@ -48,6 +57,10 @@ persistence:
     mountPath: /config
     existingClaim: ""
     hostPath: ""
+    smb:
+      source: ""
+      existingSecret: ""
+      mountOptions: []
     subPath: ""
     storageClass: ""
     accessModes:

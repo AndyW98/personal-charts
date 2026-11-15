@@ -104,6 +104,19 @@ persistence:
   enabled: true
   # Use a pre-created PVC instead of letting the chart create one.
   existingClaim: ""
+  # Mount an SMB / CIFS share instead of a PVC, through the SMB CSI driver
+  # (smb.csi.k8s.io), which must be installed in the cluster. Opt in by
+  # setting source:
+  #   source          //server/share
+  #   existingSecret  Secret in the release namespace with `username` and
+  #                   `password` keys (optional `domain`). Leave empty only
+  #                   for a guest share, with `guest` in mountOptions.
+  #   mountOptions    CIFS mount options. Empty: uid / gid from
+  #                   podSecurityContext, dir_mode=0770, file_mode=0660.
+  smb:
+    source: ""
+    existingSecret: ""
+    mountOptions: []
   storageClass: ""
   accessModes:
     - ReadWriteOnce

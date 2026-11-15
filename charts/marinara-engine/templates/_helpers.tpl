@@ -190,3 +190,25 @@ Fail fast on contradictory settings.
 {{- end -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+CIFS mount options for an SMB-backed data volume, comma separated:
+persistence.smb.mountOptions when set; otherwise files are owned by the pod's
+runAsUser / runAsGroup, since fsGroup is not applied to CIFS.
+*/}}
+{{- define "marinara-engine.smbMountOptions" -}}
+{{- $smb := .Values.persistence.smb | default dict -}}
+{{- if $smb.mountOptions -}}
+{{- join "," $smb.mountOptions -}}
+{{- else -}}
+{{- $sc := .Values.podSecurityContext | default dict -}}
+{{- $opts := list -}}
+{{- if hasKey $sc "runAsUser" -}}
+{{- $opts = append $opts (printf "uid=%d" (int64 $sc.runAsUser)) -}}
+{{- end -}}
+{{- if hasKey $sc "runAsGroup" -}}
+{{- $opts = append $opts (printf "gid=%d" (int64 $sc.runAsGroup)) -}}
+{{- end -}}
+{{- join "," (concat $opts (list "dir_mode=0770" "file_mode=0660")) -}}
+{{- end -}}
+{{- end }}

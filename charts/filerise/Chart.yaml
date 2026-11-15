@@ -2,7 +2,7 @@ apiVersion: v2
 name: filerise
 description: FileRise - self-hosted web file manager
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "v3.42.0"
 home: https://github.com/error311/FileRise
 sources:

@@ -2,7 +2,7 @@ apiVersion: v2
 name: foundryvtt
 description: Foundry Virtual Tabletop, from an image built in this repo
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "14.359"
 home: https://foundryvtt.com
 sources:

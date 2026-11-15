@@ -1,6 +1,7 @@
 {{- if .Values.backup.enabled }}
-{{- if not .Values.backup.destination.existingClaim }}
-{{- fail "backup.destination.existingClaim is required when backup.enabled is true" }}
+{{- $dest := .Values.backup.destination }}
+{{- if not (or $dest.existingClaim ($dest.smb | default dict).source) }}
+{{- fail "backup.destination.existingClaim or backup.destination.smb.source is required when backup.enabled is true" }}
 {{- end }}
 apiVersion: batch/v1
 kind: CronJob
@@ -61,9 +62,7 @@ spec:
                   {{- end }}
           volumes:
             {{- include "foundryvtt.volume" (dict "root" $ "name" "data" "p" .Values.persistence.data) | nindent 12 }}
-            - name: backup
-              persistentVolumeClaim:
-                claimName: {{ .Values.backup.destination.existingClaim }}
+            {{- include "foundryvtt.volume" (dict "root" $ "name" "backup" "p" (merge (dict "enabled" true) $dest)) | nindent 12 }}
           {{- with .Values.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 12 }}
