@@ -36,6 +36,7 @@ options set the owner from `podSecurityContext` (`uid=...,gid=...,dir_mode=0770,
 The registry keeps plain files, so `data` is a reasonable fit for a share.
 
 CI can't install this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
+Setup, mount options and troubleshooting are in the [SMB guide](../../docs/smb.md).
 
 ## Install
 

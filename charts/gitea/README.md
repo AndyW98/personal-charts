@@ -37,6 +37,7 @@ options set the owner from `env.USER_UID` / `env.USER_GID` (`uid=...,gid=...,dir
 database or add `nobrl` to the mount options.
 
 CI can't install this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
+Setup, mount options and troubleshooting are in the [SMB guide](../../docs/smb.md).
 
 ## Install
 

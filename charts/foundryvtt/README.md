@@ -45,6 +45,7 @@ Foundry keeps its worlds in LevelDB databases, which rely on file locking; prefe
 and a share for `backup.destination`, which takes the same `smb` block.
 
 CI can't install this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
+Setup, mount options and troubleshooting are in the [SMB guide](../../docs/smb.md).
 
 ## Install
 

@@ -54,6 +54,7 @@ options set the owner from the image's `romm` user (`uid=...,gid=...,dir_mode=07
 no SMB option) on local storage.
 
 CI can't install this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
+Setup, mount options and troubleshooting are in the [SMB guide](../../docs/smb.md).
 
 ## Install
 

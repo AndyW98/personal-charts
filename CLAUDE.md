@@ -16,6 +16,8 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
 - `charts/homelab-core/` — the one non-app chart: cert-manager ClusterIssuer/Certificates, shared static PVs + PVCs,
   `extraObjects`. Everything off by default (cert-manager CRDs aren't in kind).
 - `charts/<app>/ci/*-values.yaml` — extra value sets used by kubeconform validation and `ct install` in CI.
+- `docs/smb.md` — how to put chart volumes on an SMB share (driver, Secret, values, mount options, troubleshooting).
+  Update it when a chart's `smb` option or its defaults change.
 - `k3s/` — docker-compose k3s node (`K3S_ROLE=server|agent`), documented in `k3s/README.md`. Not a chart; no CI.
 - `ct.yaml` — chart-testing config; `.yamllint.yaml` — YAML lint rules for `Chart.yaml`/`values.yaml`.
 - `.github/workflows/lint-test.yaml` — PRs: `ct lint`, kubeconform validation, `ct install` into kind (changed charts only).
@@ -43,6 +45,9 @@ artifacts on `ghcr.io/andyw98/charts`. See `README.md` for consumer-facing usage
   name/label helpers, `app.kubernetes.io/*` labels, configurable
   `resources`, `nodeSelector`, `tolerations`, `affinity`, `podSecurityContext`,
   `securityContext`, `ingress`, `persistence`.
+- Persistence can be backed by an SMB share through `smb.source` (inline `smb.csi.k8s.io` volume, see `docs/smb.md`).
+  It is strictly opt-in: with default values a chart must render no SMB volume, and new charts should offer the
+  same option on their data volumes (not on database volumes).
 - Set sensible secure defaults: `runAsNonRoot`, drop all capabilities,
   `readOnlyRootFilesystem` where the app allows it.
 - Pin chart dependencies to exact versions in `Chart.yaml`; don't commit the

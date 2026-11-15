@@ -64,6 +64,7 @@ By default it includes Kali's `kali-linux-headless` tool set.
   directory and workspace set `persistence.smb.mountOptions` with
   `file_mode=0770` and `mfsymlinks` as well. CI can't install this (kind has
   no SMB CSI driver), so it is checked only by rendering the manifests.
+  See the [SMB guide](../../docs/smb.md).
 - **Config:** `config` is rendered to `opencode.json` and passed with
   `OPENCODE_CONFIG`. The config files in the persisted home directory and in
   each project are still read too.

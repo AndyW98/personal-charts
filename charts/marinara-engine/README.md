@@ -31,6 +31,7 @@ helm upgrade --install marinara personal-charts/marinara-engine \
   PVC is created. The default mount options make uid/gid 1000 own the files;
   `persistence.smb.mountOptions` replaces them. CI can't install this (kind
   has no SMB CSI driver), so it is checked only by rendering the manifests.
+  See the [SMB guide](../../docs/smb.md).
 - **Non-root.** The pod runs as uid/gid 1000 (`node`) with `fsGroup: 1000`.
   The upstream entrypoint chowns `/app/data` only when started as root; here
   `fsGroup` handles volume ownership instead.

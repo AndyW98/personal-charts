@@ -40,6 +40,7 @@ version is merged to `main`, it is published to:
 │   └── <chart>/
 │       ├── Dockerfile          # published as ghcr.io/andyw98/<chart>:<appVersion>
 │       └── ci-build-args       # optional build args for the CI (kind) build
+├── docs/                       # guides that apply across charts (docs/smb.md)
 ├── k3s/                        # docker-compose k3s node (server or agent), see k3s/README.md
 ├── ct.yaml                     # chart-testing config
 ├── .yamllint.yaml              # YAML lint rules for Chart.yaml / values.yaml
@@ -73,6 +74,12 @@ helm upgrade --install <release> oci://ghcr.io/andyw98/charts/<chart> \
 > If the repository or GHCR packages are private, GitHub Pages needs to be
 > accessible to the cluster and `helm registry login ghcr.io` needs a token
 > with `read:packages`.
+
+## Storing data on an SMB share
+
+Most charts can keep a volume on an SMB / CIFS share (a NAS, for example) instead of a PVC. It is opt-in: nothing
+changes unless you set `smb.source` on a volume. [`docs/smb.md`](docs/smb.md) covers the driver, the credentials
+Secret, the values for each chart, mount options and troubleshooting.
 
 ## Adding a chart
 

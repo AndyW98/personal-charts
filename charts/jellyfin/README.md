@@ -36,6 +36,7 @@ options set the owner from `env.PUID` / `env.PGID` (`uid=...,gid=...,dir_mode=07
 `media` is the natural candidate. `config` holds SQLite databases and is better kept on local storage.
 
 CI can't install this (kind has no SMB CSI driver), so the SMB path is checked only by rendering the manifests.
+Setup, mount options and troubleshooting are in the [SMB guide](../../docs/smb.md).
 
 ## Install
 
